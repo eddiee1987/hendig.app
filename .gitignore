@@ -1,0 +1,23 @@
+# Ignorer operativsystemspesifikke filer
+.DS_Store
+Thumbs.db
+
+# Ignorer loggfiler
+*.log
+
+# Ignorer midlertidige filer
+*.tmp
+*.swp
+
+# Ignorer kompilert kode
+*.class
+*.pyc
+*.o
+*.out
+
+# Ignorer miljøfiler
+.env5555node_modules/
+
+
+# Ignorer node_modules
+node_modules/
