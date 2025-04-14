@@ -1,4 +1,4 @@
-(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push(["static/chunks/src_app_ansatte_page_tsx_6f981d12._.js", {
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([typeof document === "object" ? document.currentScript : undefined, {
 
 "[project]/src/app/ansatte/page.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
 "use strict";
