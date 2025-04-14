@@ -1,8 +1,22 @@
 {
-  "/ansatte/page": "app/ansatte/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/fiken/customers/route": "app/api/fiken/customers/route.js",
+  "/api/customers/route": "app/api/customers/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/inspeksjoner/page": "app/inspeksjoner/page.js",
+  "/ansatte/[id]/page": "app/ansatte/[id]/page.js",
+  "/abonnement/ny/page": "app/abonnement/ny/page.js",
+  "/abonnement/page": "app/abonnement/page.js",
+  "/ansatte/page": "app/ansatte/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/inspeksjoner/ny/page": "app/inspeksjoner/ny/page.js",
   "/kunder/page": "app/kunder/page.js",
+  "/kunder/ny/page": "app/kunder/ny/page.js",
+  "/inspeksjoner/page": "app/inspeksjoner/page.js",
   "/page": "app/page.js",
-  "/timeforing/page": "app/timeforing/page.js"
+  "/min-side/page": "app/min-side/page.js",
+  "/prosjekter/page": "app/prosjekter/page.js",
+  "/prosjekter/planlegger/page": "app/prosjekter/planlegger/page.js",
+  "/planlegging/page": "app/planlegging/page.js",
+  "/timeforing/page": "app/timeforing/page.js",
+  "/rapport/page": "app/rapport/page.js"
 }
