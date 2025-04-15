@@ -19,5 +19,7 @@ Thumbs.db
 .env5555node_modules/
 
 
+.next
+
 # Ignorer node_modules
 node_modules/
