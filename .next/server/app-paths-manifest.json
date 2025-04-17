@@ -1,0 +1,14 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/abonnement/page": "app/abonnement/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/inspeksjoner/page": "app/inspeksjoner/page.js",
+  "/kunder/page": "app/kunder/page.js",
+  "/min-side/page": "app/min-side/page.js",
+  "/page": "app/page.js",
+  "/planlegging/page": "app/planlegging/page.js",
+  "/prosjekter/page": "app/prosjekter/page.js",
+  "/rapport/page": "app/rapport/page.js",
+  "/timeforing/page": "app/timeforing/page.js"
+}

@@ -63,6 +63,7 @@ export default function Navbar() {
     { href: '/kunder', icon: UserCircleIcon, label: 'Kunder' },
     { href: '/ansatte', icon: UsersIcon, label: 'Ansatte' },
     { href: '/rapport', icon: ChartBarIcon, label: 'Rapport' },
+    { href: '/min-side', icon: UserCircleIcon, label: 'Min Side' },
   ]
 
   return (

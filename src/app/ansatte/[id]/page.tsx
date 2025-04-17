@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
+import { fetchTimeEntriesByEmployeeId } from '@/lib/supabase'
 
 interface TimeEntry {
   id: number
@@ -69,38 +70,15 @@ export default function EmployeeProfile() {
   useEffect(() => {
     const fetchTimeEntries = async () => {
       try {
-        // TODO: Replace with actual Supabase query
-        // const { data } = await supabase
-        //   .from('time_entries')
-        //   .select('*')
-        //   .eq('employee_id', id)
-        //   .order('date', { ascending: false })
-        
-        // Mock data for now
-        const data = [
-          {
-            id: 1,
-            date: '2025-04-08',
-            hours: 7.5,
-            project: 'Skigardkløyving',
-            comment: 'Kløyvd skigard på Østmarka'
-          },
-          {
-            id: 2,
-            date: '2025-04-07',
-            hours: 6,
-            project: 'Beising',
-            comment: 'Beist stolper på Lillestrøm'
-          }
-        ]
-        setTimeEntries(data)
+        const data = await fetchTimeEntriesByEmployeeId(id);
+        setTimeEntries(data);
       } catch (error) {
         console.error('Error fetching time entries:', error)
       } finally {
         setLoading(false)
       }
-    }
-    fetchTimeEntries()
+    };
+    fetchTimeEntries();
   }, [id])
 
   const handleSubmit = async (e: React.FormEvent) => {

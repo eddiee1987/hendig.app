@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface UserProfile {
   name: string
@@ -8,18 +8,40 @@ interface UserProfile {
   role: string
   phone: string
   department: string
+  profileImage: string // Added profileImage field
 }
 
 export default function MinSidePage() {
   const [profile, setProfile] = useState<UserProfile>({
-    name: 'Ole Nordmann',
-    email: 'ole.nordmann@driftig.no',
+    name: 'Edgar Eidsheim',
+    email: 'edgar@driftig.no',
     role: 'Driftsleder',
     phone: '+47 123 45 678',
-    department: 'Drift'
-  })
+    department: 'Drift',
+    profileImage: '/images/edgar.jpg',
+  });
 
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Reference for file input
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          setProfile((prevProfile) => ({ ...prevProfile, profileImage: reader.result as string }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    // Simulerer lagring av profil (kan utvides til å lagre til en database eller API)
+    console.log('Profil lagret:', profile);
+    setIsEditing(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 p-8 ml-64">
@@ -32,13 +54,34 @@ export default function MinSidePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Profilinformasjon */}
           <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
             <h2 className="text-xl font-semibold text-white mb-4">Profilinformasjon</h2>
             <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={profile.profileImage}
+                  alt="Profilbilde"
+                  className="w-16 h-16 rounded-full border-2 border-gray-700"
+                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-400">Navn</label>
+                  <p className="mt-1 text-white">{profile.name}</p>
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400">Navn</label>
-                <p className="mt-1 text-white">{profile.name}</p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Endre bilde
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  className="hidden"
+                  accept="image/*"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400">E-post</label>
@@ -52,10 +95,17 @@ export default function MinSidePage() {
                 <label className="block text-sm font-medium text-gray-400">Stilling</label>
                 <p className="mt-1 text-white">{profile.role}</p>
               </div>
+              <div>
+                <button
+                  onClick={handleSaveProfile}
+                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Lagre profil
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Statistikk */}
           <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
             <h2 className="text-xl font-semibold text-white mb-4">Statistikk</h2>
             <div className="space-y-4">
@@ -74,7 +124,6 @@ export default function MinSidePage() {
             </div>
           </div>
 
-          {/* Nylige aktiviteter */}
           <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 md:col-span-2">
             <h2 className="text-xl font-semibold text-white mb-4">Nylige aktiviteter</h2>
             <div className="space-y-4">
@@ -105,5 +154,5 @@ export default function MinSidePage() {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

@@ -6,27 +6,20 @@ const employees = [
   {
     id: '1',
     name: 'Edgar Eidsheim',
-    email: 'edgar@driftig.no',
-    phone: '123 45 678',
-    role: 'Eier/Sjef',
+    email: 'edgar@nesbyenhytteservice.no',
+    phone: '41404097',
+    role: 'Driftssjef',
     status: 'active'
   },
   {
     id: '2', 
     name: 'Kim Bråten',
-    email: 'kim@driftig.no',
-    phone: '234 56 789',
-    role: 'Skogarbeider',
+    email: 'kim@nesbyenhytteservice.no',
+    phone: '41151505',
+    role: 'Daglig leder',
     status: 'active'
   },
-  {
-    id: '3',
-    name: 'Kleidas Kotlov',
-    email: 'kleidas@driftig.no', 
-    phone: '345 67 890',
-    role: 'Skogarbeider',
-    status: 'active'
-  }
+ 
 ]
 
 export default function AnsattePage() {

@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: 'Dashboard', href: '/' },
-  { name: 'Inspeksjoner', href: '/inspeksjoner' },
-  { name: 'Planlegging', href: '/planlegging' },
-  { name: 'Kunder', href: '/kunder' },
+  { name: 'Timeføring', href: '/timeforing' },
   { name: 'Rapport', href: '/rapport' },
+  { name: 'Prosjekt', href: '/prosjekter' },
+  { name: 'Inspeksjoner', href: '/inspeksjoner' },
+  { name: 'Min Side', href: '/min-side' },
 ]
 
 export function Nav() {
@@ -93,4 +93,4 @@ export function Nav() {
       )}
     </nav>
   )
-} 
+}
