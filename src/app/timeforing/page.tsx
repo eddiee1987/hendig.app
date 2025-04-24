@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 
 interface TimeEntry {
@@ -24,6 +24,28 @@ export default function TimeforingPage() {
   })
   const [selectedProject, setSelectedProject] = useState<string>('all')
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('all')
+
+  // Ikoner for prosjekttyper
+  const projectOptions = [
+    { value: 'Skigard', label: 'Skigard', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="4" rx="2" strokeWidth="2" /><path d="M8 10V6m8 4V6" strokeWidth="2" /></svg>
+    ) },
+    { value: 'Torvtak', label: 'Torvtak', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="12" width="18" height="7" rx="2" strokeWidth="2" /><path d="M3 12l9-7 9 7" strokeWidth="2" /></svg>
+    ) },
+    { value: 'Administrasjon', label: 'Administrasjon', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" /><path d="M8 4v16M16 4v16" strokeWidth="2" /></svg>
+    ) },
+    { value: 'Transport', label: 'Transport', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="6" rx="2" strokeWidth="2" /><path d="M5 13V7a2 2 0 012-2h10a2 2 0 012 2v6" strokeWidth="2" /></svg>
+    ) },
+    { value: 'Kløyving', label: 'Kløyving', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3v18M6 8l6 6 6-6" strokeWidth="2" /></svg>
+    ) },
+    { value: 'Trefelling', label: 'Trefelling', icon: (
+      <svg className="w-5 h-5 inline mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2v20M6 18l6-6 6 6" strokeWidth="2" /></svg>
+    ) },
+  ]
 
   // Funksjon for å beregne timer mellom to tidspunkter
   const calculateHours = (startTime: string, endTime: string): number => {
@@ -50,6 +72,17 @@ export default function TimeforingPage() {
       return total
     }, 0)
   }
+
+  // Summering for dag, uke, måned
+  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - now.getDay())
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const dailyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => e.date === today)), [timeEntries, today])
+  const weeklyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfWeek)), [timeEntries])
+  const monthlyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfMonth)), [timeEntries])
 
   // Last inn eksisterende timeføringer fra Supabase
   useEffect(() => {
@@ -228,54 +261,50 @@ export default function TimeforingPage() {
             </h1>
             <p className="text-gray-400 mt-2">Hold oversikt over dine timer</p>
           </div>
-          <button
-            onClick={exportToCSV}
-            className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-3 rounded-full flex items-center gap-2 shadow-sm border border-gray-700 transition-all duration-200 hover:shadow-md"
-          >
-            <span>Eksporter CSV</span>
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={exportToCSV}
+              className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-3 rounded-full flex items-center gap-2 shadow-sm border border-gray-700 transition-all duration-200 hover:shadow-md"
+            >
+              <span>Eksporter CSV</span>
+            </button>
+            <button
+              onClick={() => alert('Send til Fiken-funksjon kommer snart!')}
+              className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-sm border border-blue-800 transition-all duration-200 hover:shadow-md"
+            >
+              <span>Send timeliste til Fiken</span>
+            </button>
+          </div>
         </div>
 
         {/* Statistikk-kort */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div className="bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-700 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-gray-400 font-medium">Total arbeidstid</h3>
+              <h3 className="text-gray-400 font-medium">Timer i dag</h3>
+              <div className="w-12 h-12 rounded-full bg-green-900/50 flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path d="M12 6v6l4 2" strokeWidth="2" /></svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-white mt-4">{dailyHours.toFixed(2)} t</p>
+          </div>
+          <div className="bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-700 hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-gray-400 font-medium">Timer denne uken</h3>
               <div className="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" /><path d="M8 4v16M16 4v16" strokeWidth="2" /></svg>
               </div>
             </div>
-            <p className="text-3xl font-bold text-white mt-4">
-              {calculateTotalHours(filteredEntries).toFixed(2)} timer
-            </p>
+            <p className="text-3xl font-bold text-white mt-4">{weeklyHours.toFixed(2)} t</p>
           </div>
           <div className="bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-700 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-gray-400 font-medium">Registreringer</h3>
-              <div className="w-12 h-12 rounded-full bg-indigo-900/50 flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-white mt-4">
-              {filteredEntries.length}
-            </p>
-          </div>
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-700 hover:shadow-md transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-gray-400 font-medium">Gjennomsnitt per dag</h3>
+              <h3 className="text-gray-400 font-medium">Timer denne måneden</h3>
               <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="12" width="18" height="7" rx="2" strokeWidth="2" /><path d="M3 12l9-7 9 7" strokeWidth="2" /></svg>
               </div>
             </div>
-            <p className="text-3xl font-bold text-white mt-4">
-              {(calculateTotalHours(filteredEntries) / (filteredEntries.length || 1)).toFixed(2)} timer
-            </p>
+            <p className="text-3xl font-bold text-white mt-4">{monthlyHours.toFixed(2)} t</p>
           </div>
         </div>
 
@@ -322,14 +351,18 @@ export default function TimeforingPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Prosjekt</label>
-                <input
-                  type="text"
+                <select
                   name="project"
                   value={newEntry.project}
                   onChange={handleInputChange}
                   className="w-full rounded-xl border-gray-700 focus:ring-blue-500 focus:border-blue-500 bg-gray-700 text-gray-300"
                   required
-                />
+                >
+                  <option value="">Velg prosjekt...</option>
+                  {projectOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Starttid</label>

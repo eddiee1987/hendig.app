@@ -28,6 +28,7 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
   const [progress, setProgress] = useState(0)
   const [totalRows, setTotalRows] = useState(0)
   const [processedRows, setProcessedRows] = useState(0)
+  const [showImport, setShowImport] = useState(false)
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -155,55 +156,63 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
       <h2 className="text-xl font-semibold text-white mb-4">Importer abonnementer</h2>
-      
-      <div className="mb-6">
-        <p className="text-gray-400 mb-2">
-          Last opp en Excel-fil med abonnementer. Filen må inneholde følgende kolonner:
-        </p>
-        <ul className="text-gray-400 text-sm list-disc pl-5 mb-4">
-          <li>Fornavn</li>
-          <li>Etternavn</li>
-          <li>Adresse</li>
-          <li>Kommune</li>
-          <li>Vår (sjekkboks)</li>
-          <li>Høst (sjekkboks)</li>
-          <li>E-post</li>
-          <li>Fakturert (sjekkboks)</li>
-          <li>Fornyelsesdato</li>
-          <li>Sum</li>
-          <li>Notat</li>
-        </ul>
-      </div>
-      
-      <div className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-white">
-          Velg Excel-fil
-        </label>
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-          className="block w-full text-sm text-gray-400 border border-gray-700 rounded-lg cursor-pointer bg-gray-800 focus:outline-none"
-        />
-      </div>
-      
-      {isUploading && (
-        <div className="mb-4">
-          <div className="flex justify-between mb-1">
-            <span className="text-sm font-medium text-white">Importerer...</span>
-            <span className="text-sm font-medium text-white">{progress}%</span>
+      {!showImport ? (
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          onClick={() => setShowImport(true)}
+        >
+          Importer kunder fra fil
+        </button>
+      ) : (
+        <>
+          <div className="mb-6">
+            <p className="text-gray-400 mb-2">
+              Last opp en Excel-fil med abonnementer. Filen må inneholde følgende kolonner:
+            </p>
+            <ul className="text-gray-400 text-sm list-disc pl-5 mb-4">
+              <li>Fornavn</li>
+              <li>Etternavn</li>
+              <li>Adresse</li>
+              <li>Kommune</li>
+              <li>Vår (sjekkboks)</li>
+              <li>Høst (sjekkboks)</li>
+              <li>E-post</li>
+              <li>Fakturert (sjekkboks)</li>
+              <li>Fornyelsesdato</li>
+              <li>Sum</li>
+              <li>Notat</li>
+            </ul>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2.5">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${progress}%` }}
-            ></div>
+          <div className="mb-6">
+            <label className="block mb-2 text-sm font-medium text-white">
+              Velg Excel-fil
+            </label>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="block w-full text-sm text-gray-400 border border-gray-700 rounded-lg cursor-pointer bg-gray-800 focus:outline-none"
+            />
           </div>
-          <p className="text-sm text-gray-400 mt-2">
-            {processedRows} av {totalRows} abonnementer importert
-          </p>
-        </div>
+          {isUploading && (
+            <div className="mb-4">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-white">Importerer...</span>
+                <span className="text-sm font-medium text-white">{progress}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">
+                {processedRows} av {totalRows} abonnementer importert
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

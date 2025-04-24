@@ -50,6 +50,16 @@ interface DashboardStats {
   activeProjects: number
 }
 
+interface TimeEntry {
+  id: string
+  date: string
+  start_time: string
+  end_time: string
+  project: string
+  comments?: string
+  total_hours?: number
+}
+
 export default function DashboardPage() {
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([])
   const [upcomingInspections, setUpcomingInspections] = useState<Customer[]>([])
@@ -83,6 +93,7 @@ export default function DashboardPage() {
   ])
   const [newTodo, setNewTodo] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [recentTimeEntries, setRecentTimeEntries] = useState<TimeEntry[]>([])
 
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,6 +112,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData()
+    fetchRecentTimeEntries()
 
     const getGreeting = () => {
       const hour = new Date().getHours()
@@ -118,6 +130,23 @@ export default function DashboardPage() {
 
     setGreeting(getGreeting())
   }, [])
+
+  async function fetchRecentTimeEntries() {
+    try {
+      const { data, error } = await supabase
+        .from('time_entries')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(3)
+      if (error) {
+        console.error('Error fetching recent time entries:', error)
+        return
+      }
+      setRecentTimeEntries(data || [])
+    } catch (error) {
+      console.error('Unexpected error fetching recent time entries:', error)
+    }
+  }
 
   async function fetchDashboardData() {
     try {
@@ -359,29 +388,33 @@ export default function DashboardPage() {
 
         {/* Activities Grid */}
         <div className="mb-6">
-
           {/* Aktivitetsliste */}
           <div className="bg-gray-800 rounded-2xl p-4 md:p-6 border border-gray-700">
             <h2 className="text-xl font-semibold text-white mb-4">Nylige aktiviteter</h2>
             <div className="space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="flex items-center justify-between py-3 border-b border-gray-700 last:border-b-0">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+              {recentTimeEntries.length === 0 ? (
+                <p className="text-gray-400">Ingen nylige timeføringer</p>
+              ) : (
+                recentTimeEntries.map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between py-3 border-b border-gray-700 last:border-b-0">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white">Ny timeføring registrert</p>
+                        <p className="text-sm text-gray-400">Prosjekt: {entry.project}</p>
+                        <p className="text-sm text-gray-500">{entry.date} {entry.start_time} - {entry.end_time}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white">Ny timeføring registrert</p>
-                      <p className="text-sm text-gray-400">Prosjekt: Kundeportal</p>
-                    </div>
+                    <span className="text-sm text-gray-400">{entry.total_hours ? `${entry.total_hours} t` : ''}</span>
                   </div>
-                  <span className="text-sm text-gray-400">2 timer siden</span>
-                </div>
-              ))}
+                ))
+              )}
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Abonnement oversikt */}

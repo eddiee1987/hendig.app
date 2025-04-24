@@ -17,6 +17,7 @@ import {
   XMarkIcon,
   UsersIcon
 } from '@heroicons/react/24/outline'
+import { WarehouseIcon } from './WarehouseIcon';
 
 type NavItem = {
   href: string;
@@ -60,6 +61,7 @@ export default function Navbar() {
     { href: '/abonnement', icon: CreditCardIcon, label: 'Abonnement' },
     { href: '/prosjekter', icon: FolderIcon, label: 'Prosjekter' },
     { href: '/planlegging', icon: CalendarIcon, label: 'Planlegging' },
+    { href: '/lager', icon: WarehouseIcon, label: 'Lager' }, // <-- Lager shortcut
     { href: '/kunder', icon: UserCircleIcon, label: 'Kunder' },
     { href: '/ansatte', icon: UsersIcon, label: 'Ansatte' },
     { href: '/rapport', icon: ChartBarIcon, label: 'Rapport' },

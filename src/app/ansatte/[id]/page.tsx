@@ -148,105 +148,12 @@ export default function EmployeeProfile() {
             </div>
           </div>
 
-          {/* Time entries */}
-          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full md:w-2/3">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">Timeføring</h3>
-              <button 
-                onClick={() => setShowForm(!showForm)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                {showForm ? 'Avbryt' : 'Ny timeføring'}
-              </button>
+          {/* Timeføring er flyttet til timeforing-modulen */}
+          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full md:w-2/3 flex items-center justify-center">
+            <div className="text-gray-400 text-center">
+              <p>Timeføring for ansatte er nå samlet i <b>Timeføring</b>-modulen.</p>
+              <a href="/timeforing" className="text-blue-400 underline">Gå til timeføring</a>
             </div>
-
-            {showForm && (
-              <form onSubmit={handleSubmit} className="bg-gray-700/50 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Dato</label>
-                    <input
-                      type="date"
-                      value={newEntry.date}
-                      onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
-                      className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-1">Timer</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0.5"
-                      max="24"
-                      value={newEntry.hours}
-                      onChange={(e) => setNewEntry({...newEntry, hours: parseFloat(e.target.value)})}
-                      className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-300 mb-1">Prosjekt</label>
-                    <select
-                      value={newEntry.project}
-                      onChange={(e) => setNewEntry({...newEntry, project: e.target.value})}
-                      className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
-                      required
-                    >
-                      <option value="">Velg prosjekt</option>
-                      {projects.map(project => (
-                        <option key={project} value={project}>{project}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm text-gray-300 mb-1">Kommentar (valgfritt)</label>
-                    <textarea
-                      value={newEntry.comment}
-                      onChange={(e) => setNewEntry({...newEntry, comment: e.target.value})}
-                      className="w-full bg-gray-600 border border-gray-500 rounded-lg px-3 py-2 text-white"
-                      rows={2}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <button
-                    type="submit"
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-                  >
-                    Lagre
-                  </button>
-                </div>
-              </form>
-            )}
-            
-            {loading ? (
-              <div className="text-gray-400">Laster timeføring...</div>
-            ) : timeEntries.length === 0 ? (
-              <div className="text-gray-400">Ingen registrerte timer</div>
-            ) : (
-              <div className="space-y-4">
-                {timeEntries.map(entry => (
-                  <div key={entry.id} className="bg-gray-700/50 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium text-white">{entry.project}</h4>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {format(new Date(entry.date), 'EEEE d. MMMM yyyy', { locale: nb })}
-                        </p>
-                        {entry.comment && (
-                          <p className="text-sm text-gray-300 mt-2">{entry.comment}</p>
-                        )}
-                      </div>
-                      <div className="text-lg font-semibold text-white">
-                        {entry.hours} timer
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -58,11 +58,31 @@ export default function MinSidePage() {
             <h2 className="text-xl font-semibold text-white mb-4">Profilinformasjon</h2>
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <img
-                  src={profile.profileImage}
-                  alt="Profilbilde"
-                  className="w-16 h-16 rounded-full border-2 border-gray-700"
-                />
+                {profile.profileImage ? (
+                  <img
+                    src={profile.profileImage}
+                    alt="Profilbilde"
+                    className="w-16 h-16 rounded-full border-2 border-gray-700"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-blue-900/50 flex items-center justify-center">
+                    <svg
+                      viewBox="0 0 64 64"
+                      className="w-12 h-12"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle cx="32" cy="32" r="30" fill="#FCD7B6" />
+                      <ellipse cx="32" cy="40" rx="14" ry="10" fill="#fff" />
+                      <ellipse cx="22" cy="28" rx="3" ry="4" fill="#222" />
+                      <ellipse cx="42" cy="28" rx="3" ry="4" fill="#222" />
+                      <rect x="22" y="44" width="20" height="6" rx="3" fill="#B07D56" />
+                      <path d="M20 44c2 3 8 5 12 5s10-2 12-5" stroke="#222" strokeWidth="2" strokeLinecap="round" />
+                      <rect x="24" y="38" width="16" height="4" rx="2" fill="#222" />
+                      <ellipse cx="32" cy="50" rx="6" ry="2" fill="#B07D56" />
+                    </svg>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-400">Navn</label>
                   <p className="mt-1 text-white">{profile.name}</p>
