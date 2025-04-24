@@ -1,8 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/abonnement/page": "app/abonnement/page.js",
+  "/ansatte/page": "app/ansatte/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/inspeksjoner/ny/page": "app/inspeksjoner/ny/page.js",
   "/inspeksjoner/page": "app/inspeksjoner/page.js",
   "/kunder/page": "app/kunder/page.js",
   "/min-side/page": "app/min-side/page.js",
