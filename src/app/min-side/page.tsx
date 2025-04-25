@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { fetchLagerHistorikk } from '@/lib/supabase'
 
 interface UserProfile {
   name: string
@@ -42,6 +43,18 @@ export default function MinSidePage() {
     console.log('Profil lagret:', profile);
     setIsEditing(false);
   };
+
+  const [lagerHistorikk, setLagerHistorikk] = useState<Array<{
+    created_at: string;
+    navn: string;
+    type: string;
+    antall: number;
+    kommentar: string;
+  }>>([])
+
+  useEffect(() => {
+    fetchLagerHistorikk().then(setLagerHistorikk)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-900 p-8 ml-64">
@@ -168,6 +181,40 @@ export default function MinSidePage() {
                   <p className="text-white">Registrerte 4 timer på Prosjekt X</p>
                   <p className="text-sm text-gray-400">5 timer siden</p>
                 </div>
+              </div>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-white mb-2">Lagerhistorikk</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-gray-300">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="py-2">Dato</th>
+                      <th className="py-2">Vare</th>
+                      <th className="py-2">Type</th>
+                      <th className="py-2">Antall</th>
+                      <th className="py-2">Kommentar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lagerHistorikk.length === 0 && (
+                      <tr><td colSpan={5} className="text-center py-4 text-gray-500">Ingen lagerhistorikk funnet</td></tr>
+                    )}
+                    {lagerHistorikk.map((h, i) => (
+                      <tr key={i} className="border-b border-gray-700">
+                        <td className="py-2">{new Date(h.created_at).toLocaleString('nb-NO')}</td>
+                        <td className="py-2">{h.navn}</td>
+                        <td className="py-2">
+                          <span className={h.type === 'inntak' ? 'text-green-400' : 'text-red-400'}>
+                            {h.type === 'inntak' ? 'Inntak' : 'Uttak'}
+                          </span>
+                        </td>
+                        <td className="py-2">{h.antall}</td>
+                        <td className="py-2">{h.kommentar}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

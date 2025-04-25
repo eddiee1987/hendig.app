@@ -1,30 +1,28 @@
-import type { Metadata } from 'next'
+"use client";
+
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from "@/lib/utils"
 import Navbar from '@/components/Navbar'
 import { Toaster } from 'react-hot-toast'
+import { usePathname } from 'next/navigation'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 })
 
-export const metadata: Metadata = {
-  title: 'Driftig',
-  description: 'Driftig - Administrasjonssystem',
-}
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname();
   return (
     <html lang="en" className="dark">
       <body className="bg-gray-900 text-gray-100">
         <div className="flex min-h-screen">
-          <Navbar />
+          {pathname !== '/login' && <Navbar />}
           <main className="flex-1 transition-all duration-300 ml-16 p-8">
             <div className="max-w-7xl mx-auto">
               {children}

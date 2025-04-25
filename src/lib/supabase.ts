@@ -122,11 +122,15 @@ export async function fetchLagerHistorikk(): Promise<Array<{
   try {
     const { data, error } = await supabase
       .from('lager_transactions')
-      .select('created_at, type, antall, kommentar, lager_id, lager(navn)')
+      .select('created_at, type, antall, kommentar, lager_id, lager:lager_id(navn)')
       .order('created_at', { ascending: false })
       .limit(100)
     if (error) {
       console.error('Error fetching lager historikk:', error)
+      // Log the full error object for debugging
+      if (typeof window !== 'undefined') {
+        (window as any).__supabaseLagerHistorikkError = error;
+      }
       return []
     }
     // Map til flat struktur med varenavn
@@ -143,39 +147,58 @@ export async function fetchLagerHistorikk(): Promise<Array<{
   }
 }
 
-// Registrer en lagertransaksjon (inntak/uttak) og oppdater lagerbeholdning
-export async function registerLagerTransaksjon({ key, type, antall, kommentar }: { key: string, type: 'inntak' | 'uttak', antall: number, kommentar: string }) {
+// Registrer en lagertransaksjon (inntak/uttak/manuell) og oppdater lagerbeholdning
+export async function registerLagerTransaksjon({ key, type, antall, kommentar }: { key: string, type: 'inntak' | 'uttak' | 'manuell', antall: number, kommentar: string }) {
   try {
     // Finn varenavn fra key
     let navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å')
     // Hent rad for varen
+    let lagerId: number | null = null;
+    let nyttAntall: number = 0;
     const { data: lagerRows, error: lagerError } = await supabase
       .from('lager')
       .select('id, antall')
       .eq('navn', navn)
       .limit(1)
-    if (lagerError || !lagerRows || lagerRows.length === 0) {
-      return { error: 'Fant ikke varen i lageret' }
-    }
-    const lagerId = lagerRows[0].id
-    let nyttAntall = lagerRows[0].antall
-    if (type === 'inntak') {
-      nyttAntall += antall
-    } else {
-      if (lagerRows[0].antall < antall) {
-        return { error: 'Ikke nok på lager for uttak' }
+    if (!lagerRows || lagerRows.length === 0) {
+      if (type === 'manuell') {
+        // Opprett ny vare hvis manuell
+        const { data: insertData, error: insertError } = await supabase
+          .from('lager')
+          .insert([{ navn, antall: Number(antall) }])
+          .select('id')
+          .single();
+        if (insertError || !insertData) {
+          return { error: 'Kunne ikke opprette ny vare' }
+        }
+        lagerId = insertData.id;
+        nyttAntall = Number(antall);
+      } else {
+        return { error: 'Fant ikke varen i lageret' }
       }
-      nyttAntall -= antall
+    } else {
+      lagerId = lagerRows[0].id;
+      nyttAntall = lagerRows[0].antall;
+      if (type === 'inntak') {
+        nyttAntall += antall;
+      } else if (type === 'uttak') {
+        if (lagerRows[0].antall < antall) {
+          return { error: 'Ikke nok på lager for uttak' }
+        }
+        nyttAntall -= antall;
+      } else if (type === 'manuell') {
+        nyttAntall = antall;
+      }
+      // Oppdater lagerbeholdning for alle typer
+      const { error: updateError } = await supabase
+        .from('lager')
+        .update({ antall: nyttAntall })
+        .eq('id', lagerId)
+      if (updateError) {
+        return { error: 'Kunne ikke oppdatere lagerbeholdning' }
+      }
     }
-    // Oppdater lagerbeholdning
-    const { error: updateError } = await supabase
-      .from('lager')
-      .update({ antall: nyttAntall })
-      .eq('id', lagerId)
-    if (updateError) {
-      return { error: 'Kunne ikke oppdatere lagerbeholdning' }
-    }
-    // Registrer transaksjon
+    // Registrer transaksjon ALLTID
     const { error: transError } = await supabase
       .from('lager_transactions')
       .insert({ lager_id: lagerId, type, antall, kommentar })

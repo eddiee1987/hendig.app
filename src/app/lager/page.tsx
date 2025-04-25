@@ -64,9 +64,39 @@ export default function LagerPage() {
   }
 
   const handleSave = async () => {
-    await updateLager(form)
-    setLager(form)
-    setEdit(false)
+    // Finn hvilke varer som er endret
+    const changedKeys = Object.keys(form).filter(key => form[key] !== lager[key]);
+
+    await updateLager(form);
+    setLager(form);
+    setEdit(false);
+
+    // Registrer manuell transaksjon for hver endret vare
+    for (const key of changedKeys) {
+      const gammeltAntall = lager[key] ?? 0;
+      const nyttAntall = form[key] ?? 0;
+      const diff = nyttAntall - gammeltAntall;
+      if (diff !== 0) {
+        // Finn riktig navn og lager_id fra initialItems
+        const item = initialItems.find(i => i.key === key);
+        if (!item) continue;
+        // Hent lager_id fra Supabase
+        const { data: lagerRows, error } = await fetchLager();
+        // Vi antar at fetchLager returnerer et objekt med key: antall, men vi trenger id. Hvis du har en bedre mapping, bruk den.
+        // Alternativt kan du hente lager_id fra en egen mapping eller fra Supabase direkte.
+        // Her antar vi at registerLagerTransaksjon kan ta imot key/navn.
+        await registerLagerTransaksjon({
+          key,
+          type: 'manuell',
+          antall: diff,
+          kommentar: `Manuell endring fra ${gammeltAntall} til ${nyttAntall} via rediger-knapp`
+        });
+      }
+    }
+
+    // Oppdater historikk etter lagring
+    const hist = await fetchLagerHistorikk();
+    setHistorikk(hist || []);
   }
 
   // Funksjon for å registrere transaksjon
@@ -131,6 +161,8 @@ export default function LagerPage() {
           )}
         </div>
 
+        
+
         {/* Transaksjonsskjema */}
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 mt-10">
           <h2 className="text-2xl font-semibold text-white mb-4">Registrer transaksjon</h2>
@@ -185,6 +217,8 @@ export default function LagerPage() {
           </form>
           {transError && <p className="text-red-400 mt-2">{transError}</p>}
         </div>
+
+
 
         {/* Historikk */}
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 mt-10">

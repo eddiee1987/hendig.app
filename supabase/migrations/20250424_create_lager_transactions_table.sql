@@ -10,3 +10,7 @@ CREATE TABLE IF NOT EXISTS lager_transactions (
 
 -- Optional: Index for faster lookup by lager_id
 CREATE INDEX IF NOT EXISTS idx_lager_transactions_lager_id ON lager_transactions(lager_id);
+
+-- ...existing code...
+  type TEXT NOT NULL CHECK (type IN ('inntak', 'uttak', 'manuell')),
+-- ...existing code...
