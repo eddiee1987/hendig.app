@@ -58,6 +58,7 @@ export default function Navbar() {
   const navItems: NavItem[] = [
     { href: '/timeforing', icon: ClockIcon, label: 'Timeføring' },   
     { href: '/inspeksjoner', icon: ClipboardDocumentCheckIcon, label: 'Inspeksjoner' },
+    { href: '/hms', icon: FolderIcon, label: 'HMS' },
     { href: '/abonnement', icon: CreditCardIcon, label: 'Abonnement' },
     { href: '/prosjekter', icon: FolderIcon, label: 'Prosjekter' },
     { href: '/planlegging', icon: CalendarIcon, label: 'Planlegging' },

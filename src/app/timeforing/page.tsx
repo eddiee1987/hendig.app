@@ -132,6 +132,20 @@ export default function TimeforingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Get the date from the form input
+    const entryDate = new Date(newEntry.date || '');
+    const today = new Date();
+
+    // Set the time of today to midnight for accurate date comparison
+    today.setHours(0, 0, 0, 0);
+    entryDate.setHours(0, 0, 0, 0);
+
+    // Check if the entry date is in the future
+    if (entryDate > today) {
+      alert('Du kan ikke føre timer fram i tid.');
+      return; // Prevent submission
+    }
     
     try {
       const totalHours = calculateHours(newEntry.startTime || '', newEntry.endTime || '')

@@ -8,6 +8,7 @@ import Link from "next/link"
 
 interface Inspection {
   id: string
+  customer_id: string
   customer_name: string
   customer_address: string
   inspection_date: string
@@ -16,6 +17,11 @@ interface Inspection {
   inspector: string
   notes: string
   roof_condition: string
+  before_images?: string[]
+  after_images?: string[]
+  abonnementer?: {
+    etternavn: string
+  }
 }
 
 export default function InspeksjonerDashboard() {
@@ -44,10 +50,13 @@ export default function InspeksjonerDashboard() {
     try {
       setLoading(true)
       
-      // Try to fetch data directly
+      // Fetch inspections with customer name from abonnementer
       const { data, error } = await supabase
         .from('inspections')
-        .select('*')
+        .select(`
+          *,
+          abonnementer:customer_id (etternavn)
+        `)
         .order('inspection_date', { ascending: false })
       
       if (error) {
@@ -95,7 +104,7 @@ export default function InspeksjonerDashboard() {
   const filteredInspections = inspections.filter(inspection => {
     // Search term filter
     const searchMatch = 
-      inspection.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inspection.abonnementer?.etternavn || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       inspection.customer_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (inspection.inspector && inspection.inspector.toLowerCase().includes(searchTerm.toLowerCase()))
     
@@ -281,8 +290,31 @@ export default function InspeksjonerDashboard() {
                   {filteredInspections.map(inspection => (
                     <tr key={inspection.id} className="hover:bg-gray-700/50">
                       <td className="px-6 py-4">
-                        <div className="text-white">{inspection.customer_name}</div>
+                        <div className="text-white">{inspection.abonnementer?.etternavn || inspection.customer_name || 'Ukjent kunde'}</div>
                         <div className="text-sm text-gray-400">{inspection.customer_address}</div>
+                        {/* Før/etter-bilder */}
+                        <div className="flex gap-2 mt-2">
+                          {inspection.before_images && inspection.before_images.length > 0 && (
+                            <div>
+                              <div className="text-xs text-gray-400">Før</div>
+                              <div className="flex gap-1">
+                                {inspection.before_images.slice(0,2).map((url, idx) => (
+                                  <img key={idx} src={url} alt="Før-bilde" className="w-10 h-10 object-cover rounded" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {inspection.after_images && inspection.after_images.length > 0 && (
+                            <div>
+                              <div className="text-xs text-gray-400">Etter</div>
+                              <div className="flex gap-1">
+                                {inspection.after_images.slice(0,2).map((url, idx) => (
+                                  <img key={idx} src={url} alt="Etter-bilde" className="w-10 h-10 object-cover rounded" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-white">

@@ -35,8 +35,10 @@ export default function NyInspeksjon() {
   const [sendSms, setSendSms] = useState(false)
   
   // Image handling
-  const [images, setImages] = useState<File[]>([])
-  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [beforeImages, setBeforeImages] = useState<File[]>([])
+  const [afterImages, setAfterImages] = useState<File[]>([])
+  const [beforeImageUrls, setBeforeImageUrls] = useState<string[]>([])
+  const [afterImageUrls, setAfterImageUrls] = useState<string[]>([])
 
   useEffect(() => {
     fetchCustomers()
@@ -80,29 +82,50 @@ export default function NyInspeksjon() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBeforeImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newImages = Array.from(e.target.files)
-      setImages(prev => [...prev, ...newImages])
-      
-      // Create preview URLs for the images
+      setBeforeImages(prev => [...prev, ...newImages])
       const newUrls = newImages.map(file => URL.createObjectURL(file))
-      setImageUrls(prev => [...prev, ...newUrls])
+      setBeforeImageUrls(prev => [...prev, ...newUrls])
+    }
+  }
+
+  const handleAfterImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newImages = Array.from(e.target.files)
+      setAfterImages(prev => [...prev, ...newImages])
+      const newUrls = newImages.map(file => URL.createObjectURL(file))
+      setAfterImageUrls(prev => [...prev, ...newUrls])
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!selectedCustomerId || !inspectionType || !inspectionDate) {
       setSubmitStatus('Vennligst fyll ut alle påkrevde felt')
       return
     }
-    
     try {
       setSubmitStatus('Lagrer inspeksjon...')
-      
-      // Prepare data for insertion
+      // 1. Last opp før- og etter-bilder til Supabase Storage
+      const beforeImageUrlsUpload: string[] = []
+      const afterImageUrlsUpload: string[] = []
+      // Opprett en unik mappe for denne inspeksjonen basert på dato og kunde
+      const folder = `inspeksjoner/${selectedCustomerId}_${inspectionDate}`
+      for (const file of beforeImages) {
+        const { data, error } = await supabase.storage.from('inspeksjonsbilder').upload(`${folder}/for/${file.name}`, file, { upsert: true })
+        if (error) continue
+        const url = supabase.storage.from('inspeksjonsbilder').getPublicUrl(`${folder}/for/${file.name}`).data.publicUrl
+        beforeImageUrlsUpload.push(url)
+      }
+      for (const file of afterImages) {
+        const { data, error } = await supabase.storage.from('inspeksjonsbilder').upload(`${folder}/etter/${file.name}`, file, { upsert: true })
+        if (error) continue
+        const url = supabase.storage.from('inspeksjonsbilder').getPublicUrl(`${folder}/etter/${file.name}`).data.publicUrl
+        afterImageUrlsUpload.push(url)
+      }
+      // 2. Lagre inspeksjonen med bilde-URLer
       const inspectionData = {
         customer_id: selectedCustomerId,
         customer_name: selectedCustomerName,
@@ -112,18 +135,15 @@ export default function NyInspeksjon() {
         status: inspectionStatus,
         roof_condition: roofCondition,
         notes: notes,
-        inspector: inspector
+        inspector: inspector,
+        before_images: beforeImageUrlsUpload,
+        after_images: afterImageUrlsUpload
       }
-      
-      // Insert into Supabase
       const { error } = await supabase
         .from('inspections')
         .insert([inspectionData])
-      
       if (error) {
         console.error('Error saving inspection:', error)
-        
-        // Check if the error is because the table doesn't exist
         if (error.message.includes('relation "inspections" does not exist') || 
             error.message.includes('does not exist') ||
             error.code === '42P01') {
@@ -133,38 +153,29 @@ export default function NyInspeksjon() {
         }
         return
       }
-      
-      // If this is a completed spring or fall maintenance, update the customer record
+      // Oppdater abonnement ved utført vedlikehold
       if (inspectionStatus === 'utført') {
         if (inspectionType === 'vårvedlikehold' || inspectionType === 'høstvedlikehold') {
           const fieldToUpdate = inspectionType === 'vårvedlikehold' ? 'var' : 'host'
-          
           const { error: updateError } = await supabase
             .from('abonnementer')
             .update({ [fieldToUpdate]: 'Ja' })
             .eq('id', selectedCustomerId)
-          
           if (updateError) {
             console.error('Error updating customer maintenance status:', updateError)
           }
         }
       }
-      
-      // Handle SMS notification (in a real app, this would connect to an SMS service)
       if (sendSms) {
         console.log('SMS would be sent:', {
           to: 'customer phone',
           message: `Vi kommer for å utføre ${inspectionType} på taket ditt den ${inspectionDate}`
         })
       }
-      
       setSubmitStatus('Inspeksjon lagret!')
-      
-      // Redirect back to inspections page after a short delay
       setTimeout(() => {
         router.push('/inspeksjoner')
       }, 1500)
-      
     } catch (err) {
       console.error('Unexpected error:', err)
       setSubmitStatus('En uventet feil oppstod')
@@ -225,7 +236,6 @@ export default function NyInspeksjon() {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Type inspeksjon</label>
                 <select
@@ -240,7 +250,6 @@ export default function NyInspeksjon() {
                   <option value="rehabilitering">Rehabilitering</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
                 <select
@@ -252,7 +261,6 @@ export default function NyInspeksjon() {
                   <option value="utført">Utført</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Dato</label>
                 <Input
@@ -266,83 +274,107 @@ export default function NyInspeksjon() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gray-800 border border-gray-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Inspeksjonsdetaljer</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Taktilstand</label>
-                <select
-                  className="w-full p-2 border border-gray-600 rounded bg-gray-700 text-white"
-                  value={roofCondition}
-                  onChange={(e) => setRoofCondition(e.target.value)}
-                >
-                  <option value="">Velg tilstand...</option>
-                  <option value="god">God</option>
-                  <option value="normal">Normal</option>
-                  <option value="dårlig">Dårlig</option>
-                  <option value="kritisk">Kritisk</option>
-                </select>
-              </div>
+          {inspectionStatus === 'utført' && (
+            <Card className="p-6 bg-gray-800 border border-gray-700">
+              <h2 className="text-lg font-semibold text-white mb-4">Inspeksjonsdetaljer</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Taktilstand</label>
+                  <select
+                    className="w-full p-2 border border-gray-600 rounded bg-gray-700 text-white"
+                    value={roofCondition}
+                    onChange={(e) => setRoofCondition(e.target.value)}
+                  >
+                    <option value="">Velg tilstand...</option>
+                    <option value="god">God</option>
+                    <option value="normal">Normal</option>
+                    <option value="dårlig">Dårlig</option>
+                    <option value="kritisk">Kritisk</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Inspektør</label>
-                <Input
-                  type="text"
-                  value={inspector}
-                  onChange={(e) => setInspector(e.target.value)}
-                  placeholder="Navn på inspektør"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Inspektør</label>
+                  <Input
+                    type="text"
+                    value={inspector}
+                    onChange={(e) => setInspector(e.target.value)}
+                    placeholder="Navn på inspektør"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Last opp bilder</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-                {imageUrls.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {imageUrls.map((url, index) => (
-                      <img
-                        key={index}
-                        src={url}
-                        alt={`Bilde ${index + 1}`}
-                        className="w-full h-24 object-cover rounded"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Før-bilder</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleBeforeImageUpload}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  {beforeImageUrls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {beforeImageUrls.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Før-bilde ${index + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Etter-bilder</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleAfterImageUpload}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                  {afterImageUrls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {afterImageUrls.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Etter-bilde ${index + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Notater</label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Beskriv takets tilstand og eventuelle problemer..."
-                  rows={4}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Notater</label>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Beskriv takets tilstand og eventuelle problemer..."
+                    rows={4}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="sendSms"
-                  checked={sendSms}
-                  onChange={(e) => setSendSms(e.target.checked)}
-                  className="rounded border-gray-600 bg-gray-700 text-blue-600"
-                />
-                <label htmlFor="sendSms" className="text-gray-300">
-                  Send SMS til kunde om {inspectionStatus === 'planlagt' ? 'planlagt' : 'utført'} vedlikehold
-                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendSms"
+                    checked={sendSms}
+                    onChange={(e) => setSendSms(e.target.checked)}
+                    className="rounded border-gray-600 bg-gray-700 text-blue-600"
+                  />
+                  <label htmlFor="sendSms" className="text-gray-300">
+                    Send SMS til kunde om utført vedlikehold
+                  </label>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           <div className="flex justify-end space-x-4">
             <Button

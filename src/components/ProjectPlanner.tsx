@@ -48,6 +48,7 @@ interface CalendarDay {
   isToday: boolean
   projects: ScheduledProject[]
   abonnements: ScheduledAbonnement[]
+  inspections: Inspection[]
 }
 
 // Convert Supabase project format to our internal format
@@ -63,7 +64,21 @@ const convertProject = (project: SupabaseProject): Project => ({
   priority: project.priority
 })
 
-export default function ProjectPlanner({ projects, abonnements }: { projects: Project[], abonnements: Abonnement[] }) {
+interface Inspection {
+  id: string
+  customer_name: string
+  customer_address: string
+  inspection_date: string
+  inspection_type: 'vårvedlikehold' | 'høstvedlikehold' | 'rehabilitering'
+  status: 'planlagt' | 'utført'
+  inspector: string
+  notes: string
+  roof_condition: string
+  before_images?: string[]
+  after_images?: string[]
+}
+
+export default function ProjectPlanner({ projects, abonnements, inspections }: { projects: Project[], abonnements: Abonnement[], inspections: Inspection[] }) {
   const [view, setView] = useState<'month' | 'week' | 'day'>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([])
@@ -143,35 +158,26 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
   useEffect(() => {
     const days: CalendarDay[] = []
     const today = new Date()
-    
     // Get first day of month
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-    
     // Get last day of month
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-    
-    // Get day of week of first day (0 = Sunday, 1 = Monday, etc.)
-    let firstDayOfWeek = firstDayOfMonth.getDay()
-    // Adjust for Monday as first day of week
-    firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
-    
+    // Calculate days from previous month to fill first week
+    const daysFromPrevMonth = (firstDayOfMonth.getDay() + 6) % 7
     // Add days from previous month
-    const daysFromPrevMonth = firstDayOfWeek
-    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0)
-    
-    for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
-      const date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonth.getDate() - i)
+    for (let i = firstDayOfMonth.getDate() - daysFromPrevMonth; i < firstDayOfMonth.getDate(); i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i)
       days.push({
         date,
-        dayOfMonth: date.getDate(),
+        dayOfMonth: i,
         isCurrentMonth: false,
         isToday: date.toDateString() === today.toDateString(),
         projects: getProjectsForDate(date),
-        abonnements: getAbonnementsForDate(date)
+        abonnements: getAbonnementsForDate(date),
+        inspections: getInspectionsForDate(date)
       })
     }
-    
-    // Add days from current month
+    // Add days for current month
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i)
       days.push({
@@ -180,10 +186,10 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
         isCurrentMonth: true,
         isToday: date.toDateString() === today.toDateString(),
         projects: getProjectsForDate(date),
-        abonnements: getAbonnementsForDate(date)
+        abonnements: getAbonnementsForDate(date),
+        inspections: getInspectionsForDate(date)
       })
     }
-    
     // Add days from next month to complete the grid (6 rows x 7 days = 42 cells)
     const daysToAdd = 42 - days.length
     for (let i = 1; i <= daysToAdd; i++) {
@@ -194,12 +200,12 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
         isCurrentMonth: false,
         isToday: date.toDateString() === today.toDateString(),
         projects: getProjectsForDate(date),
-        abonnements: getAbonnementsForDate(date)
+        abonnements: getAbonnementsForDate(date),
+        inspections: getInspectionsForDate(date)
       })
     }
-    
     setCalendarDays(days)
-  }, [currentDate, scheduledProjects])
+  }, [currentDate, scheduledProjects, scheduledAbonnements, inspections])
 
   // Get projects scheduled for a specific date
   function getProjectsForDate(date: Date): ScheduledProject[] {
@@ -211,6 +217,12 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
   function getAbonnementsForDate(date: Date): ScheduledAbonnement[] {
     const dateString = date.toISOString().split('T')[0]
     return scheduledAbonnements.filter(abonnement => abonnement.scheduledDate === dateString)
+  }
+
+  // Get inspections scheduled for a specific date
+  function getInspectionsForDate(date: Date): Inspection[] {
+    const dateString = date.toISOString().split('T')[0]
+    return inspections.filter(inspection => inspection.inspection_date === dateString)
   }
 
   // Navigation functions
@@ -771,6 +783,20 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
                               )}
                             </div>
                           ))}
+                          
+                          {/* Inspeksjoner */}
+                          {day.inspections.map(inspection => (
+                            <div
+                              key={`inspection-${inspection.id}-${day.date.toISOString()}`}
+                              className="text-xs p-1 rounded relative bg-yellow-900/30 text-yellow-300 border border-yellow-800/50 mt-1 flex items-center gap-1"
+                              title={inspection.inspection_type}
+                            >
+                              <span className="font-bold">Inspeksjon:</span> {inspection.customer_name}
+                              <span className="ml-auto px-1 py-0.5 rounded bg-yellow-800/50 text-yellow-200 text-[10px]">
+                                {inspection.inspection_type}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -907,7 +933,7 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
                     onDrop={(e) => handleDrop(e, currentDate)}
                   >
                     <div className="space-y-3">
-                      {/* Projects */}
+                      {/* Prosjekter */}
                       {scheduledProjects
                         .filter(p => p.scheduledDate === currentDate.toISOString().split('T')[0])
                         .map(project => (
@@ -945,7 +971,6 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
                             </div>
                           </div>
                         ))}
-                      
                       {/* Abonnements */}
                       {scheduledAbonnements
                         .filter(a => a.scheduledDate === currentDate.toISOString().split('T')[0])
@@ -973,9 +998,31 @@ export default function ProjectPlanner({ projects, abonnements }: { projects: Pr
                             </div>
                           </div>
                         ))}
-                      
+                      {/* Inspeksjoner */}
+                      {inspections
+                        .filter(i => i.inspection_date === currentDate.toISOString().split('T')[0])
+                        .map(inspection => (
+                          <div
+                            key={`inspection-${inspection.id}`}
+                            className="p-4 rounded-lg relative bg-yellow-900/30 text-yellow-300 border border-yellow-800/50"
+                          >
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-medium text-white">Inspeksjon: {inspection.customer_name}</h4>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-800/50 text-yellow-200">
+                                {inspection.inspection_type}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-400 mt-2">Adresse: {inspection.customer_address}</p>
+                            <p className="text-sm text-gray-400">Inspektør: {inspection.inspector || '-'}</p>
+                            <div className="mt-3 flex justify-between items-center">
+                              <div className="text-sm text-gray-400">Status: <span className="text-white">{inspection.status}</span></div>
+                              {/* Her kan det legges til knapp for detaljer/redigering */}
+                            </div>
+                          </div>
+                        ))}
                       {scheduledProjects.filter(p => p.scheduledDate === currentDate.toISOString().split('T')[0]).length === 0 && 
-                       scheduledAbonnements.filter(a => a.scheduledDate === currentDate.toISOString().split('T')[0]).length === 0 && (
+                       scheduledAbonnements.filter(a => a.scheduledDate === currentDate.toISOString().split('T')[0]).length === 0 &&
+                       inspections.filter(i => i.inspection_date === currentDate.toISOString().split('T')[0]).length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <p>Ingen aktiviteter planlagt for denne dagen</p>
                           <p className="text-sm mt-2">Dra et prosjekt eller en vedlikeholdsavtale hit for å planlegge det</p>
