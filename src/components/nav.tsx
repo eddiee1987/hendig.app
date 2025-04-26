@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Prosjekt', href: '/prosjekter' },
   { name: 'Inspeksjoner', href: '/inspeksjoner' },
   { name: 'Min Side', href: '/min-side' },
+  { name: 'Dokumenter', href: '/dokumenter' },
 ]
 
 export function Nav() {

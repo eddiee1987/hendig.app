@@ -108,22 +108,59 @@ export default function NyInspeksjon() {
     }
     try {
       setSubmitStatus('Lagrer inspeksjon...')
-      // 1. Last opp før- og etter-bilder til Supabase Storage
+      // 1. Ensure bucket exists
+      try {
+        await supabase.storage.createBucket('inspeksjonsbilder', { public: true })
+      } catch (err: unknown) {
+        if (err instanceof Error && !err.message.includes('Bucket already exists')) {
+          console.error('Error creating bucket:', err)
+          throw new Error('Kunne ikke opprette bilde-lager')
+        }
+      }
+
+      // 2. Upload images with unique filenames
       const beforeImageUrlsUpload: string[] = []
       const afterImageUrlsUpload: string[] = []
-      // Opprett en unik mappe for denne inspeksjonen basert på dato og kunde
-      const folder = `inspeksjoner/${selectedCustomerId}_${inspectionDate}`
+      const folder = `inspeksjoner/${selectedCustomerId}_${Date.now()}`
+      
       for (const file of beforeImages) {
-        const { data, error } = await supabase.storage.from('inspeksjonsbilder').upload(`${folder}/for/${file.name}`, file, { upsert: true })
-        if (error) continue
-        const url = supabase.storage.from('inspeksjonsbilder').getPublicUrl(`${folder}/for/${file.name}`).data.publicUrl
-        beforeImageUrlsUpload.push(url)
+        const uniqueName = `${Date.now()}-${file.name}`
+        const { error } = await supabase.storage
+          .from('inspeksjonsbilder')
+          .upload(`${folder}/for/${uniqueName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
+        
+        if (error) {
+          console.error('Error uploading before image:', error)
+          throw new Error(`Kunne ikke laste opp før-bilde: ${error.message}`)
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('inspeksjonsbilder')
+          .getPublicUrl(`${folder}/for/${uniqueName}`)
+        beforeImageUrlsUpload.push(publicUrl)
       }
+
       for (const file of afterImages) {
-        const { data, error } = await supabase.storage.from('inspeksjonsbilder').upload(`${folder}/etter/${file.name}`, file, { upsert: true })
-        if (error) continue
-        const url = supabase.storage.from('inspeksjonsbilder').getPublicUrl(`${folder}/etter/${file.name}`).data.publicUrl
-        afterImageUrlsUpload.push(url)
+        const uniqueName = `${Date.now()}-${file.name}`
+        const { error } = await supabase.storage
+          .from('inspeksjonsbilder')
+          .upload(`${folder}/etter/${uniqueName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
+        
+        if (error) {
+          console.error('Error uploading after image:', error)
+          throw new Error(`Kunne ikke laste opp etter-bilde: ${error.message}`)
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('inspeksjonsbilder')
+          .getPublicUrl(`${folder}/etter/${uniqueName}`)
+        afterImageUrlsUpload.push(publicUrl)
       }
       // 2. Lagre inspeksjonen med bilde-URLer
       const inspectionData = {
