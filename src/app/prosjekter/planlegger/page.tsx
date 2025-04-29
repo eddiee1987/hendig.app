@@ -9,8 +9,7 @@ interface Project {
   id: string;
   name: string;
   description: string;
-  clientId: string; // Changed from client: string to clientId: string
-  clientName?: string; // Add clientName to store the fetched client name
+  client: string;
   status: 'active' | 'completed' | 'archived';
   startDate: string;
   endDate?: string;
@@ -57,7 +56,7 @@ export default function ProsjektPlanleggerPage() {
 
         {/* Project Planner Component */}
         <div className="h-[calc(100vh-200px)]">
-          <ProjectPlanner projects={projects} />
+          <ProjectPlanner projects={projects} abonnements={[]} inspections={[]} />
         </div>
       </div>
     </div>
