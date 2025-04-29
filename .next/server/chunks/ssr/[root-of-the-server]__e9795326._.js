@@ -110,7 +110,7 @@ async function fetchLager() {
         // Map til { key: antall }
         const lagerObj = {};
         data?.forEach((row)=>{
-            let key = row.navn.toLowerCase().replaceAll(' ', '_').replaceAll('å', 'a').replaceAll('æ', 'ae').replaceAll('ø', 'o');
+            const key = row.navn.toLowerCase().replaceAll(' ', '_').replaceAll('å', 'a').replaceAll('æ', 'ae').replaceAll('ø', 'o');
             lagerObj[key] = row.antall;
         });
         return lagerObj;
@@ -130,7 +130,7 @@ async function updateLager(form) {
         // Oppdater eller opprett for hver vare
         for (const [key, antall] of Object.entries(form)){
             // Finn navn fra key
-            let navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å');
+            const navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å');
             // Søk etter eksisterende rad
             const existingRow = existing?.find((row)=>row.navn.toLowerCase().replaceAll(' ', '_') === key);
             if (existingRow) {
@@ -165,10 +165,9 @@ async function fetchLagerHistorikk() {
             }
             return [];
         }
-        // Map til flat struktur med varenavn
         return (data || []).map((row)=>({
                 created_at: row.created_at,
-                navn: row.lager?.navn || '',
+                navn: row.lager?.[0]?.navn || '',
                 type: row.type,
                 antall: row.antall,
                 kommentar: row.kommentar || ''
@@ -181,7 +180,7 @@ async function fetchLagerHistorikk() {
 async function registerLagerTransaksjon({ key, type, antall, kommentar }) {
     try {
         // Finn varenavn fra key
-        let navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å');
+        const navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å');
         // Hent rad for varen
         let lagerId = null;
         let nyttAntall = 0;
