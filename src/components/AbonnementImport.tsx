@@ -74,19 +74,42 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
           const jsonData = XLSX.utils.sheet_to_json(worksheet)
           
           // Map Excel columns to our data structure
-          const mappedData = jsonData.map((row: any) => ({
-            fornavn: row['Fornavn'] || '',
-            etternavn: row['Etternavn'] || '',
-            adresse: row['Adresse'] || '',
-            kommune: row['Kommune'] || '',
-            var_utfort: Boolean(row['Vår']),
-            host_utfort: Boolean(row['Høst']),
-            epost: row['E-post'] || '',
-            fakturert: Boolean(row['Fakturert']),
-            fornyelsesdato: row['Fornyelsesdato'] ? formatDate(row['Fornyelsesdato']) : '',
-            sum: Number(row['Sum']) || 0,
-            notat: row['Notat'] || ''
-          }))
+          interface ExcelRow {
+            Fornavn?: string
+            Etternavn?: string
+            Adresse?: string
+            Kommune?: string
+            'Vår utført'?: boolean | string
+            'Høst utført'?: boolean | string
+            'E-post'?: string
+            Fakturert?: boolean | string
+            Fornyelsesdato?: any
+            Sum?: string | number
+            Notat?: string
+          }
+
+          const mappedData = jsonData.map((row: unknown) => {
+            const excelRow = row as ExcelRow
+            return {
+              fornavn: excelRow.Fornavn || '',
+              etternavn: excelRow.Etternavn || '',
+              adresse: excelRow.Adresse || '',
+              kommune: excelRow.Kommune || '',
+              var_utfort: typeof excelRow['Vår utført'] === 'boolean' 
+                ? excelRow['Vår utført'] 
+                : excelRow['Vår utført'] === 'Ja',
+              host_utfort: typeof excelRow['Høst utført'] === 'boolean'
+                ? excelRow['Høst utført']
+                : excelRow['Høst utført'] === 'Ja',
+              epost: excelRow['E-post'] || '',
+              fakturert: typeof excelRow.Fakturert === 'boolean'
+                ? excelRow.Fakturert
+                : excelRow.Fakturert === 'Ja',
+              fornyelsesdato: formatDate(excelRow.Fornyelsesdato),
+              sum: Number(excelRow.Sum) || 0,
+              notat: excelRow.Notat || ''
+            }
+          })
           
           resolve(mappedData)
         } catch (error) {

@@ -26,12 +26,12 @@ export function Toaster() {
   )
 }
 
-const { toast } = useToast()
-
-// Eksempel på bruk
-toast({
-  title: "Suksess!",
-  description: "Endringene ble lagret",
-  variant: "success",
-  duration: 3000
-}) 
+// Eksempel på bruk:
+// import { useToast } from "./use-toast"
+// const { toast } = useToast()
+// toast({
+//   title: "Suksess!",
+//   description: "Endringene ble lagret",
+//   variant: "success",
+//   duration: 3000
+// })

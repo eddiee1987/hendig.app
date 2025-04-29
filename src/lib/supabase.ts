@@ -67,7 +67,7 @@ export async function fetchLager(): Promise<Record<string, number>> {
     // Map til { key: antall }
     const lagerObj: Record<string, number> = {}
     data?.forEach((row: { navn: string; antall: number }) => {
-      let key = row.navn.toLowerCase().replaceAll(' ', '_').replaceAll('å', 'a').replaceAll('æ', 'ae').replaceAll('ø', 'o')
+      const key = row.navn.toLowerCase().replaceAll(' ', '_').replaceAll('å', 'a').replaceAll('æ', 'ae').replaceAll('ø', 'o')
       lagerObj[key] = row.antall
     })
     return lagerObj
@@ -91,7 +91,7 @@ export async function updateLager(form: Record<string, number>) {
     // Oppdater eller opprett for hver vare
     for (const [key, antall] of Object.entries(form)) {
       // Finn navn fra key
-      let navn = key
+      const navn = key
         .replaceAll('_', ' ')
         .replaceAll('ae', 'æ')
         .replaceAll('o', 'ø')
@@ -134,9 +134,17 @@ export async function fetchLagerHistorikk(): Promise<Array<{
       return []
     }
     // Map til flat struktur med varenavn
-    return (data || []).map((row: any) => ({
+    interface LagerTransaction {
+      created_at: string
+      lager?: Array<{ navn: string }>
+      type: string
+      antall: number
+      kommentar: string | null
+    }
+
+    return (data || []).map((row: LagerTransaction) => ({
       created_at: row.created_at,
-      navn: row.lager?.navn || '',
+      navn: row.lager?.[0]?.navn || '',
       type: row.type,
       antall: row.antall,
       kommentar: row.kommentar || ''
@@ -151,7 +159,7 @@ export async function fetchLagerHistorikk(): Promise<Array<{
 export async function registerLagerTransaksjon({ key, type, antall, kommentar }: { key: string, type: 'inntak' | 'uttak' | 'manuell', antall: number, kommentar: string }) {
   try {
     // Finn varenavn fra key
-    let navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å')
+    const navn = key.replaceAll('_', ' ').replaceAll('ae', 'æ').replaceAll('o', 'ø').replaceAll('a', 'å')
     // Hent rad for varen
     let lagerId: number | null = null;
     let nyttAntall: number = 0;

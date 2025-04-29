@@ -103,7 +103,15 @@ export default function TimeforingPage() {
       }
       
       // Konverter data fra Supabase format til applikasjonens format
-      const formattedEntries = data.map((entry: any) => ({
+      const formattedEntries = data.map((entry: {
+        id: string
+        date: string
+        start_time: string
+        end_time: string
+        project: string
+        comments: string | null
+        total_hours: number
+      }) => ({
         id: entry.id,
         date: entry.date,
         startTime: entry.start_time.substring(0, 5), // Format HH:MM

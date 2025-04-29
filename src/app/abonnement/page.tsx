@@ -2,13 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { 
-  ArrowUpTrayIcon,
-  CheckCircleIcon,
-  XCircleIcon
-} from '@heroicons/react/24/outline'
 import * as XLSX from 'xlsx'
 import AbonnementImport from '@/components/AbonnementImport'
+
+interface ExcelRow {
+  Fornavn?: string;
+  Etternavn?: string;
+  Adresse?: string;
+  Kommune?: string;
+  'utført vår'?: string | boolean;
+  'utført høstvedlikehold'?: string | boolean;
+  'E-post'?: string;
+  'utført fakturering'?: string | boolean;
+  fornyelsesdato?: string | number;
+  Sum?: string | number;
+  Notat?: string;
+  // Add any other expected Excel columns here with proper types
+  [key: string]: unknown; // Fallback for unexpected columns
+}
 
 interface AbonnementData {
   id?: string
