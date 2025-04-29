@@ -5,16 +5,22 @@ import Link from 'next/link'
 import ProjectPlanner from '@/components/ProjectPlanner'
 
 
-interface Project {
+interface LocalStorageProject {
   id: string;
   name: string;
   description: string;
-  client: string;
+  client?: string;
+  clientId?: string;
+  clientName?: string;
   status: 'active' | 'completed' | 'archived';
   startDate: string;
   endDate?: string;
   budget?: number;
   priority: 'low' | 'medium' | 'high';
+}
+
+interface Project extends Omit<LocalStorageProject, 'clientId' | 'clientName'> {
+  client: string;
 }
 
 export default function ProsjektPlanleggerPage() {
@@ -24,7 +30,13 @@ export default function ProsjektPlanleggerPage() {
   useEffect(() => {
     const savedProjects = localStorage.getItem('projects')
     if (savedProjects) {
-      setProjects(JSON.parse(savedProjects))
+      const parsedProjects: LocalStorageProject[] = JSON.parse(savedProjects)
+      // Convert projects to match expected interface
+      const convertedProjects: Project[] = parsedProjects.map(project => ({
+        ...project,
+        client: project.client || project.clientName || project.clientId || 'Ukjent klient'
+      }))
+      setProjects(convertedProjects)
     }
   }, [])
 
