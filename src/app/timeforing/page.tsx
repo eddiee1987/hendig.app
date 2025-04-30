@@ -80,9 +80,9 @@ export default function TimeforingPage() {
   startOfWeek.setDate(now.getDate() - now.getDay())
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const dailyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => e.date === today)), [timeEntries, today])
-  const weeklyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfWeek)), [timeEntries])
-  const monthlyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfMonth)), [timeEntries])
+  const dailyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => e.date === today)), [timeEntries, today, calculateTotalHours])
+  const weeklyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfWeek)), [timeEntries, calculateTotalHours, startOfWeek])
+  const monthlyHours = useMemo(() => calculateTotalHours(timeEntries.filter(e => new Date(e.date) >= startOfMonth)), [timeEntries, calculateTotalHours, startOfMonth])
 
   // Last inn eksisterende timeføringer fra Supabase
   useEffect(() => {

@@ -1,18 +1,6 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { format } from 'date-fns'
-import { nb } from 'date-fns/locale'
-import { fetchTimeEntriesByEmployeeId } from '@/lib/supabase'
-
-interface TimeEntry {
-  id: number
-  date: string
-  hours: number
-  project: string
-  comment: string
-}
 
 interface Employee {
   name: string
@@ -49,65 +37,6 @@ const employeeData: Record<string, Employee> = {
 export default function EmployeeProfile() {
   const params = useParams()
   const id = params?.id as string
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([])
-  const [loading, setLoading] = useState(true)
-  const [newEntry, setNewEntry] = useState<Omit<TimeEntry, 'id'>>({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    hours: 7.5,
-    project: '',
-    comment: ''
-  })
-  const [showForm, setShowForm] = useState(false)
-
-  const projects = [
-    'Administrasjon',
-    'Skigardkløyving', 
-    'Beising',
-    'Trefelling',
-    'Transport'
-  ]
-
-  useEffect(() => {
-    const fetchTimeEntries = async () => {
-      try {
-        const data = await fetchTimeEntriesByEmployeeId(id);
-        setTimeEntries(data);
-      } catch (error) {
-        console.error('Error fetching time entries:', error)
-      } finally {
-        setLoading(false)
-      }
-    };
-    fetchTimeEntries();
-  }, [id])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      // TODO: Replace with actual Supabase insert
-      // const { data } = await supabase
-      //   .from('time_entries')
-      //   .insert([{ ...newEntry, employee_id: id }])
-      //   .select()
-      
-      // Mock response
-      const mockEntry = {
-        id: Math.max(0, ...timeEntries.map(e => e.id)) + 1,
-        ...newEntry
-      }
-      
-      setTimeEntries([mockEntry, ...timeEntries])
-      setNewEntry({
-        date: format(new Date(), 'yyyy-MM-dd'),
-        hours: 7.5,
-        project: '',
-        comment: ''
-      })
-      setShowForm(false)
-    } catch (error) {
-      console.error('Error saving time entry:', error)
-    }
-  }
 
   const employee = id ? employeeData[id] : undefined
 

@@ -5,7 +5,7 @@ import { getScheduledProjects } from '@/services/projectService'
 import { format, isSameWeek, parseISO } from 'date-fns'
 
 export default function MaintenanceWidget() {
-  const [scheduledProjects, setScheduledProjects] = useState<any[]>([])
+  const [scheduledProjects, setScheduledProjects] = useState<Awaited<ReturnType<typeof getScheduledProjects>>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -14,7 +14,7 @@ export default function MaintenanceWidget() {
       try {
         const data = await getScheduledProjects()
         // Filter for current week
-        const currentWeekProjects = data.filter((project: any) => 
+        const currentWeekProjects = data.filter(project => 
           isSameWeek(parseISO(project.scheduled_date), new Date())
         )
         setScheduledProjects(currentWeekProjects)

@@ -25,17 +25,6 @@ interface Customer {
   tak_storrelse?: string
 }
 
-interface Project {
-  id?: string
-  name: string
-  status: 'active' | 'completed' | 'on-hold'
-  customerId: string
-  startDate: string
-  deadline?: string
-  hoursUsed: number
-  hoursBudgeted: number
-}
-
 interface Todo {
   id: string
   task: string
@@ -418,7 +407,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Abonnement oversikt */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-white">Kommende fornyelser</h2>
@@ -508,6 +497,43 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Nylig oppdaterte kunder */}
+          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">Nylig oppdaterte kunder</h2>
+              <Link href="/abonnement" className="text-sm text-blue-400 hover:text-blue-300">
+                Se alle
+              </Link>
+            </div>
+            
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="h-12 bg-gray-700 animate-pulse rounded"></div>
+                ))}
+              </div>
+            ) : recentCustomers.length > 0 ? (
+              <div className="space-y-4">
+                {recentCustomers.map((customer) => (
+                  <div key={customer.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                      <div>
+                        <p className="text-white">{customer.etternavn}</p>
+                        <p className="text-sm text-gray-400">{customer.adresse}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      {customer.fornyelsesdato ? new Date(customer.fornyelsesdato).toLocaleDateString('no-NO') : 'Ikke satt'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400">Ingen nylig oppdaterte kunder</p>
             )}
           </div>
         </div>

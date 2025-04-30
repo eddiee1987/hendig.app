@@ -2,24 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import * as XLSX from 'xlsx'
 import AbonnementImport from '@/components/AbonnementImport'
-
-interface ExcelRow {
-  Fornavn?: string;
-  Etternavn?: string;
-  Adresse?: string;
-  Kommune?: string;
-  'utført vår'?: string | boolean;
-  'utført høstvedlikehold'?: string | boolean;
-  'E-post'?: string;
-  'utført fakturering'?: string | boolean;
-  fornyelsesdato?: string | number;
-  Sum?: string | number;
-  Notat?: string;
-  // Add any other expected Excel columns here with proper types
-  [key: string]: unknown; // Fallback for unexpected columns
-}
 
 interface AbonnementData {
   id?: string
@@ -78,7 +61,6 @@ export default function Abonnement() {
   const [abonnementer, setAbonnementer] = useState<AbonnementData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [importStatus, setImportStatus] = useState<string>('')
   const [visNyKundeSkjema, setVisNyKundeSkjema] = useState(false)
   const [nyKunde, setNyKunde] = useState<NyKundeForm>({
     etternavn: '',
@@ -101,7 +83,7 @@ export default function Abonnement() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   
   // Duplicate verification state
-  const [duplicateWarnings, setDuplicateWarnings] = useState<DuplicateWarning[]>([])
+  const [duplicateWarnings] = useState<DuplicateWarning[]>([])
   const [showDuplicateWarnings, setShowDuplicateWarnings] = useState(false)
   
   // Mock data for customer details
@@ -226,176 +208,6 @@ export default function Abonnement() {
     }
   }
 
-  async function handleFileImport(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      setImportStatus('Importerer fil...')
-      const reader = new FileReader()
-      reader.onload = async (e) => {
-        const data = e.target?.result
-        const workbook = XLSX.read(data, { type: 'binary' })
-        const sheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[sheetName]
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
-
-        // Log the first row to see the actual column names
-        if (jsonData.length > 0 && typeof jsonData[0] === 'object' && jsonData[0] !== null) {
-          console.log('First row column names:', Object.keys(jsonData[0]))
-        }
-
-        const transformedData = jsonData.map((row: any) => {
-          // Helper function to find a value regardless of case sensitivity
-          const getValueCaseInsensitive = (obj: any, keySearch: string) => {
-            const keys = Object.keys(obj)
-            const key = keys.find(k => k.toLowerCase() === keySearch.toLowerCase())
-            return key ? obj[key] : undefined
-          }
-          
-          // Get values with case-insensitive lookup
-          const fornavn = getValueCaseInsensitive(row, 'Fornavn')
-          const etternavn = getValueCaseInsensitive(row, 'Etternavn')
-          const adresse = getValueCaseInsensitive(row, 'Adresse')
-          const kommune = getValueCaseInsensitive(row, 'Kommune')
-          const varUtfortRaw = getValueCaseInsensitive(row, 'utført vår')
-          const hostUtfortRaw = getValueCaseInsensitive(row, 'utført høstvedlikehold')
-          const epost = getValueCaseInsensitive(row, 'E-post')
-          const fakturertRaw = getValueCaseInsensitive(row, 'utført fakturering')
-          const fornyelsesdatoRaw = getValueCaseInsensitive(row, 'fornyelsesdato')
-          const sum = getValueCaseInsensitive(row, 'Sum')
-          const notat = getValueCaseInsensitive(row, 'Notat')
-          
-          // Combine first and last name for the etternavn field if both exist
-          // Make sure to handle all possible combinations and trim any extra spaces
-          let fullName = '';
-          if (fornavn && etternavn) {
-            fullName = `${fornavn.trim()} ${etternavn.trim()}`.trim();
-          } else if (fornavn) {
-            fullName = fornavn.trim();
-          } else if (etternavn) {
-            fullName = etternavn.trim();
-          }
-          
-          // If no name was found, use a placeholder
-          if (!fullName) {
-            fullName = 'Ukjent navn';
-          }
-          
-          console.log(`Combining names: Fornavn="${fornavn}", Etternavn="${etternavn}" => "${fullName}"`);
-          
-          // Convert checkbox values to 'Ja'/'Nei' strings
-          const varUtfort = typeof varUtfortRaw === 'boolean' 
-            ? (varUtfortRaw ? 'Ja' : 'Nei')
-            : (varUtfortRaw || '')
-          
-          const hostUtfort = typeof hostUtfortRaw === 'boolean'
-            ? (hostUtfortRaw ? 'Ja' : 'Nei')
-            : (hostUtfortRaw || '')
-          
-          const fakturertUtfort = typeof fakturertRaw === 'boolean'
-            ? (fakturertRaw ? 'Ja' : 'Nei')
-            : (fakturertRaw || '')
-          
-          // Format date if it's in Excel date format
-          let fornyelsesdato = fornyelsesdatoRaw || ''
-          if (fornyelsesdato && typeof fornyelsesdato === 'number') {
-            // Convert Excel date number to JS date
-            const excelDate = new Date(Math.round((fornyelsesdato - 25569) * 86400 * 1000))
-            fornyelsesdato = excelDate.toISOString().split('T')[0] // Format as YYYY-MM-DD
-          }
-          
-          return {
-            etternavn: fullName,
-            adresse: adresse || '',
-            sted: '', // Not in the import format, set empty
-            kommune: kommune || '',
-            var: varUtfort,
-            host: hostUtfort,
-            epost: epost || '',
-            fakturert: fakturertUtfort,
-            mail_var: '', // Not in the import format, set empty
-            mail_host: '', // Not in the import format, set empty
-            tidsbruk_slatt: '', // Not in the import format, set empty
-            fornyelsesdato: fornyelsesdato,
-            sum: sum ? sum.toString() : '',
-            notat: notat || ''
-          }
-        })
-
-        console.log('Checking for duplicates and preparing data for import:', transformedData)
-        
-        try {
-          // Check for potential duplicates
-          const potentialDuplicates: DuplicateWarning[] = []
-          
-          for (const newCustomer of transformedData) {
-            // Check for duplicates by name and address
-            const { data: existingCustomers } = await supabase
-              .from('abonnementer')
-              .select('*')
-              .or(`etternavn.ilike.${newCustomer.etternavn},adresse.ilike.${newCustomer.adresse}`)
-            
-            if (existingCustomers && existingCustomers.length > 0) {
-              for (const existingCustomer of existingCustomers) {
-                let reason = ''
-                
-                // Check for exact name match
-                if (existingCustomer.etternavn.toLowerCase() === newCustomer.etternavn.toLowerCase()) {
-                  reason += 'Samme navn. '
-                }
-                
-                // Check for exact address match
-                if (existingCustomer.adresse.toLowerCase() === newCustomer.adresse.toLowerCase()) {
-                  reason += 'Samme adresse. '
-                }
-                
-                if (reason) {
-                  potentialDuplicates.push({
-                    customer: newCustomer,
-                    existingCustomer,
-                    reason: reason.trim()
-                  })
-                  break // Only add the first duplicate found for this customer
-                }
-              }
-            }
-          }
-          
-          if (potentialDuplicates.length > 0) {
-            // Store duplicates for display
-            setDuplicateWarnings(potentialDuplicates)
-            setShowDuplicateWarnings(true)
-            setImportStatus(`Advarsel: ${potentialDuplicates.length} potensielle duplikater funnet. Se advarsler for detaljer.`)
-          } else {
-            // No duplicates found, proceed with import
-            const { error } = await supabase
-              .from('abonnementer')
-              .insert(transformedData)
-
-            if (error) {
-              console.error('Supabase insert error:', error)
-              setImportStatus(`Import feilet: ${error.message || 'Ukjent feil'}`)
-              return
-            }
-            
-            setImportStatus(`Import fullført! ${transformedData.length} abonnementer lagt til.`)
-            // Refresh the subscription list
-            fetchAbonnementer()
-          }
-        } catch (insertError) {
-          console.error('Insert error:', insertError)
-          setImportStatus('Import feilet: Kunne ikke legge til abonnementer')
-          return
-        }
-      }
-      reader.readAsBinaryString(file)
-    } catch (error) {
-      console.error('Import error:', error)
-      setImportStatus('Import feilet')
-      setError('Kunne ikke importere filen')
-    }
-  }
 
   if (loading) return (
     <div className="text-center text-white">
@@ -1131,7 +943,7 @@ export default function Abonnement() {
                 type="button"
                 onClick={() => {
                   setShowDuplicateWarnings(false)
-                  setImportStatus('')
+                  console.log('Import avbrutt')
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
@@ -1150,17 +962,17 @@ export default function Abonnement() {
 
                     if (error) {
                       console.error('Supabase insert error:', error)
-                      setImportStatus(`Import feilet: ${error.message || 'Ukjent feil'}`)
+                      console.error(`Import feilet: ${error.message || 'Ukjent feil'}`)
                       return
                     }
                     
-                    setImportStatus(`Import fullført! ${customersToImport.length} abonnementer lagt til.`)
+                  console.log(`Import fullført! ${customersToImport.length} abonnementer lagt til.`)
                     setShowDuplicateWarnings(false)
                     // Refresh the subscription list
                     fetchAbonnementer()
                   } catch (error) {
                     console.error('Import error:', error)
-                    setImportStatus('Import feilet: Kunne ikke legge til abonnementer')
+                    console.error('Import feilet: Kunne ikke legge til abonnementer')
                   }
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

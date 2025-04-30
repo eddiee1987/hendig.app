@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Project, ScheduledProject } from '@/types/supabase'
+import { Project } from '@/types/supabase'
 
 // Project functions
 export async function getProjects() {
@@ -31,7 +31,7 @@ export async function getProject(id: string) {
   return data
 }
 
-export async function createProject(project: Record<string, any>) {
+export async function createProject(project: Project) {
   console.log('Creating project with data:', project)
   
   try {
@@ -70,7 +70,7 @@ export async function createProject(project: Record<string, any>) {
   }
 }
 
-export async function updateProject(id: string, project: Record<string, any>) {
+export async function updateProject(id: string, project: Partial<Project>) {
   console.log('Updating project with id:', id, 'and data:', project)
   
   try {

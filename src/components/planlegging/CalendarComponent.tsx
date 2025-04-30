@@ -1,8 +1,8 @@
 'use client'
 
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
+import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
-import nb from 'date-fns/locale/nb'
+import { nb } from 'date-fns/locale/nb'
 import { MaintenanceTask } from '@/types/maintenance'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
@@ -48,7 +48,7 @@ export default function CalendarComponent({ tasks, onTaskDrop }: Props) {
     resource: task
   }))
 
-  const handleEventDrop = ({ event, start, end }: any) => {
+  const handleEventDrop = ({ event, start, end }: { event: Event; start: Date; end: Date }) => {
     onTaskDrop(event.id, start, end)
   }
 
@@ -70,10 +70,10 @@ export default function CalendarComponent({ tasks, onTaskDrop }: Props) {
         max={new Date(0, 0, 0, 20, 0, 0)}
         formats={{
           timeGutterFormat: 'HH:mm',
-          eventTimeRangeFormat: ({ start, end }: any) =>
+          eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) =>
             `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`,
         }}
       />
     </div>
   )
-} 
+}

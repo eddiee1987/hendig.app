@@ -25,12 +25,23 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    // TODO: Valider data og lagre i database
+    console.log('Received customer data:', body)
+    
+    // Enkel validering
+    if (!body.name || !body.email) {
+      return NextResponse.json(
+        { error: 'Navn og e-post er påkrevd' },
+        { status: 400 }
+      )
+    }
+
+    // TODO: Lagre i database
     return NextResponse.json({ message: 'Kunde opprettet' }, { status: 201 })
   } catch (error) {
+    console.error('Error creating customer:', error)
     return NextResponse.json(
       { error: 'Kunne ikke opprette kunde' },
       { status: 400 }
     )
   }
-} 
+}

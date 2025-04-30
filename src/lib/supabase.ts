@@ -32,7 +32,15 @@ export async function fetchTimeEntriesByEmployeeId(employeeId: string) {
   }
 }
 
-export async function updateTimeEntry(entryId: string, updatedFields: Record<string, any>) {
+interface TimeEntryUpdateFields {
+  date?: string;
+  hours?: number;
+  project_id?: string;
+  description?: string;
+  approved?: boolean;
+}
+
+export async function updateTimeEntry(entryId: string, updatedFields: TimeEntryUpdateFields) {
   try {
     const { data, error } = await supabase
       .from('time_entries')
@@ -129,7 +137,10 @@ export async function fetchLagerHistorikk(): Promise<Array<{
       console.error('Error fetching lager historikk:', error)
       // Log the full error object for debugging
       if (typeof window !== 'undefined') {
-        (window as any).__supabaseLagerHistorikkError = error;
+        interface WindowWithError extends Window {
+          __supabaseLagerHistorikkError?: unknown;
+        }
+        (window as WindowWithError).__supabaseLagerHistorikkError = error;
       }
       return []
     }
@@ -163,7 +174,7 @@ export async function registerLagerTransaksjon({ key, type, antall, kommentar }:
     // Hent rad for varen
     let lagerId: number | null = null;
     let nyttAntall: number = 0;
-    const { data: lagerRows, error: lagerError } = await supabase
+    const { data: lagerRows } = await supabase
       .from('lager')
       .select('id, antall')
       .eq('navn', navn)
@@ -214,7 +225,7 @@ export async function registerLagerTransaksjon({ key, type, antall, kommentar }:
       return { error: 'Kunne ikke registrere transaksjon' }
     }
     return { success: true }
-  } catch (error) {
+  } catch {
     return { error: 'Uventet feil ved registrering' }
   }
 }

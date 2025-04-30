@@ -45,7 +45,7 @@ export default function NyttAbonnement() {
 
       alert('Abonnementet ble opprettet')
       router.push('/abonnement')
-    } catch (error) {
+    } catch {
       alert('Kunne ikke opprette abonnement')
     } finally {
       setIsLoading(false)
@@ -163,4 +163,4 @@ export default function NyttAbonnement() {
       </div>
     </div>
   )
-} 
+}

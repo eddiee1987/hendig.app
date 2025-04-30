@@ -77,19 +77,36 @@ export const getChecklists = async (): Promise<Checklist[]> => {
     throw new Error('Could not fetch checklists.');
   }
 
-  // Map the data to the expected Checklist structure and explicitly cast
-  const mappedData: Checklist[] = data?.map((item: any) => ({ // Use 'any' temporarily if join structure is complex
+  // Map the data to the expected Checklist structure
+  const mappedData: Checklist[] = ((data as unknown) as Array<{
+    id: string;
+    template_id: string;
+    user_id: string;
+    template?: { name?: string; description?: string | null };
+    user?: { full_name?: string };
+    created_at: string;
+    completed_at: string | null;
+    status: 'Påbegynt' | 'Fullført';
+  }>)?.map((item: {
+    id: string;
+    template_id: string;
+    user_id: string;
+    template?: { name?: string; description?: string | null };
+    user?: { full_name?: string };
+    created_at: string;
+    completed_at: string | null;
+    status: 'Påbegynt' | 'Fullført';
+  }) => ({
     id: item.id,
     template_id: item.template_id,
     user_id: item.user_id,
     template_name: item.template?.name || 'Ukjent Mal',
     template_description: item.template?.description || null,
     created_by_name: item.user?.full_name || 'Ukjent Bruker',
-    // department_name: item.department?.name || undefined, // Uncomment if department join is added
     created_at: item.created_at,
     completed_at: item.completed_at,
-    status: item.status as 'Påbegynt' | 'Fullført',
-  })) as Checklist[] || []; // Explicitly cast the mapped array
+    status: item.status,
+  })) || [];
 
   return mappedData;
 };
@@ -175,19 +192,44 @@ export const getChecklistWithItems = async (checklistId: string): Promise<(Check
     return null;
   }
 
+  interface ChecklistWithItemsResponse {
+    id: string;
+    template_id: string;
+    user_id: string;
+    created_at: string;
+    completed_at: string | null;
+    status: 'Påbegynt' | 'Fullført';
+    template?: { name?: string; description?: string | null };
+    user?: { full_name?: string };
+    checklist_items?: Array<{
+      id: string;
+      template_item_id: string;
+      is_checked: boolean;
+      comment: string | null;
+      created_at: string;
+      template_item?: { item_text?: string };
+    }>;
+  }
+
   // Map the data to the expected ChecklistWithItems structure, including item_text
+  const response = data as unknown as ChecklistWithItemsResponse;
   const mappedData: Checklist & { checklist_items: (ChecklistItem & { item_text?: string })[] } = {
-    id: data.id,
-    template_id: data.template_id,
-    user_id: data.user_id,
-    template_name: (data as any).template?.name || 'Ukjent Mal',
-    template_description: (data as any).template?.description || null,
-    created_by_name: (data as any).user?.full_name || 'Ukjent Bruker',
-    created_at: data.created_at,
-    completed_at: data.completed_at,
-    status: data.status as 'Påbegynt' | 'Fullført',
-    checklist_items: ((data as any).checklist_items || []).map((item: any) => ({
-      ...item,
+    id: response.id,
+    template_id: response.template_id,
+    user_id: response.user_id,
+    template_name: response.template?.name || 'Ukjent Mal',
+    template_description: response.template?.description || null,
+    created_by_name: response.user?.full_name || 'Ukjent Bruker',
+    created_at: response.created_at,
+    completed_at: response.completed_at,
+    status: response.status,
+    checklist_items: (response.checklist_items || []).map(item => ({
+      id: item.id,
+      checklist_id: response.id, // Add the parent checklist ID
+      template_item_id: item.template_item_id,
+      is_checked: item.is_checked,
+      comment: item.comment,
+      created_at: item.created_at,
       item_text: item.template_item?.item_text || undefined,
     })),
   };

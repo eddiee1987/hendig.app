@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
-import * as XLSX from 'xlsx'
+import * as ExcelJS from 'exceljs'
 import { createAbonnement } from '@/services/abonnementService'
+import { ExcelRow } from '@/types/excel'
 
 interface AbonnementData {
   fornavn: string
@@ -59,55 +60,69 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
     }
   }
 
-  const readExcelFile = (file: File): Promise<AbonnementData[]> => {
+  const convertExcelValue = (value: unknown): string | number | boolean => {
+    if (value === null || value === undefined) return ''
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return value
+    }
+    if (value instanceof Date) {
+      return value.toISOString().split('T')[0]
+    }
+    if (typeof value === 'object' && 'result' in value) {
+      return value.result?.toString() || ''
+    }
+    return value?.toString() || ''
+  }
+
+  const readExcelFile = async (file: File): Promise<AbonnementData[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
-          const data = e.target?.result
-          const workbook = XLSX.read(data, { type: 'binary' })
-          const sheetName = workbook.SheetNames[0]
-          const worksheet = workbook.Sheets[sheetName]
+          const data = e.target?.result as ArrayBuffer
+          const workbook = new ExcelJS.Workbook()
+          await workbook.xlsx.load(data)
+          const worksheet = workbook.worksheets[0]
           
           // Convert Excel data to JSON
-          const jsonData = XLSX.utils.sheet_to_json(worksheet)
+          const jsonData = worksheet.getSheetValues()
+            .filter((row, i) => i > 1 && row) // Skip header and empty rows
+            .map(row => {
+              const obj: Partial<ExcelRow> = {}
+              worksheet.getRow(1).eachCell((cell, colNumber) => {
+                if (cell.text && row && Array.isArray(row)) {
+                  const value = convertExcelValue(row[colNumber])
+                  if (value !== undefined && value !== null) {
+                    obj[cell.text as keyof ExcelRow] = value
+                  }
+                }
+              })
+              return obj
+            })
           
           // Map Excel columns to our data structure
-          interface ExcelRow {
-            Fornavn?: string
-            Etternavn?: string
-            Adresse?: string
-            Kommune?: string
-            'Vår utført'?: boolean | string
-            'Høst utført'?: boolean | string
-            'E-post'?: string
-            Fakturert?: boolean | string
-            Fornyelsesdato?: any
-            Sum?: string | number
-            Notat?: string
-          }
 
           const mappedData = jsonData.map((row: unknown) => {
             const excelRow = row as ExcelRow
             return {
-              fornavn: excelRow.Fornavn || '',
-              etternavn: excelRow.Etternavn || '',
-              adresse: excelRow.Adresse || '',
-              kommune: excelRow.Kommune || '',
+              fornavn: String(excelRow.Fornavn ?? ''),
+              etternavn: String(excelRow.Etternavn ?? ''),
+              adresse: String(excelRow.Adresse ?? ''),
+              kommune: String(excelRow.Kommune ?? ''),
               var_utfort: typeof excelRow['Vår utført'] === 'boolean' 
                 ? excelRow['Vår utført'] 
-                : excelRow['Vår utført'] === 'Ja',
+                : String(excelRow['Vår utført'] ?? '').toLowerCase() === 'ja',
               host_utfort: typeof excelRow['Høst utført'] === 'boolean'
                 ? excelRow['Høst utført']
-                : excelRow['Høst utført'] === 'Ja',
-              epost: excelRow['E-post'] || '',
+                : String(excelRow['Høst utført'] ?? '').toLowerCase() === 'ja',
+              epost: String(excelRow['E-post'] ?? ''),
               fakturert: typeof excelRow.Fakturert === 'boolean'
                 ? excelRow.Fakturert
-                : excelRow.Fakturert === 'Ja',
+                : String(excelRow.Fakturert ?? '').toLowerCase() === 'ja',
               fornyelsesdato: formatDate(excelRow.Fornyelsesdato),
-              sum: Number(excelRow.Sum) || 0,
-              notat: excelRow.Notat || ''
+              sum: Number(excelRow.Sum ?? 0),
+              notat: String(excelRow.Notat ?? '')
             }
           })
           
@@ -122,10 +137,11 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
     })
   }
 
-  const formatDate = (date: any): string => {
-    // Handle Excel date format
+  const formatDate = (date: unknown): string => {
+    if (date === undefined || date === null) return ''
+    
+    // Handle Excel date format (number of days since 1900-01-01)
     if (typeof date === 'number') {
-      // Excel dates are number of days since 1900-01-01
       const excelEpoch = new Date(1900, 0, 1)
       const dateObj = new Date(excelEpoch.getTime() + (date - 1) * 24 * 60 * 60 * 1000)
       return dateObj.toISOString().split('T')[0]
@@ -133,13 +149,23 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
     
     // Handle string date format
     if (typeof date === 'string') {
+      // DD.MM.YYYY format
       const parts = date.split('.')
       if (parts.length === 3) {
-        // DD.MM.YYYY format
         return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+      }
+      // YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date
       }
     }
     
+    // Handle Date objects
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0]
+    }
+    
+    // Fallback to empty string
     return ''
   }
 
