@@ -15,9 +15,7 @@ export default function MaintenanceWidget() {
         const data = await getScheduledProjects()
         // Filter for current week
         const currentWeekProjects = data.filter(project => 
-          isSameWeek(parseISO(project.sch
-            
-            eduled_date), new Date())
+          isSameWeek(parseISO(project.scheduled_date), new Date())
         )
         setScheduledProjects(currentWeekProjects)
       } catch (err) {
