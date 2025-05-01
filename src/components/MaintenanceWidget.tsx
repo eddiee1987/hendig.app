@@ -12,7 +12,7 @@ export default function MaintenanceWidget() {
   useEffect(() => {
     const fetchMaintenance = async () => {
       try {
-        const data = await getScheduledProjects()
+        const data = await getScheduledProj
         // Filter for current week
         const currentWeekProjects = data.filter(project => 
           isSameWeek(parseISO(project.scheduled_date), new Date())
