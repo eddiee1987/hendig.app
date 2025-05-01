@@ -146,6 +146,23 @@ export async function unscheduleAbonnementByIdAndDate(abonnementId: string, sche
   return true
 }
 
+// Process multiple abonnements from import
+export async function processAbonnements(abonnements: AbonnementInput[]) {
+  const results = []
+  
+  for (const abonnement of abonnements) {
+    try {
+      const result = await createAbonnement(abonnement)
+      results.push(result)
+    } catch (error) {
+      console.error(`Failed to create abonnement for ${abonnement.fornavn} ${abonnement.etternavn}:`, error)
+      throw error
+    }
+  }
+  
+  return results
+}
+
 // Create a new abonnement
 export async function createAbonnement(abonnement: AbonnementInput) {
   const { data, error } = await supabase

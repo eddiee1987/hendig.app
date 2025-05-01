@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import * as ExcelJS from 'exceljs'
-import { createAbonnement } from '@/services/abonnementService'
+import { processAbonnements } from '@/services/abonnementService'
 import { ExcelRow } from '@/types/excel'
 
 interface AbonnementData {
@@ -48,10 +48,26 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
       }
       
       setTotalRows(data.length)
-      await processAbonnements(data)
+      // Convert to AbonnementInput format expected by the service
+      const inputData = data.map(item => ({
+        fornavn: item.fornavn,
+        etternavn: item.etternavn,
+        adresse: item.adresse,
+        kommune: item.kommune,
+        var: item.var_utfort ? 'Ja' : 'Nei',
+        host: item.host_utfort ? 'Ja' : 'Nei',
+        epost: item.epost,
+        fakturert: item.fakturert,
+        fornyelsesdato: item.fornyelsesdato,
+        sum: item.sum,
+        notat: item.notat
+      }))
+      
+      await processAbonnements(inputData)
       
       toast.success(`${data.length} abonnementer importert`)
       e.target.value = ''
+      onImportSuccess?.()
     } catch (error) {
       console.error('Error importing abonnements:', error)
       toast.error('Kunne ikke importere abonnementer')

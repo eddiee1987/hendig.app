@@ -1,0 +1,31 @@
+[33me007222[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m last opp endringer
+[33m40f94af[m {commit_message}
+[33m53bbd3d[m erro rettet
+[33md20438d[m endringer med lint
+[33m6e8635c[m oppdatering av alt
+[33m4f491c9[m add alt
+[33mee7f17d[m fjernet .next fra repo
+[33mf2bb2a5[m fikset forskjellig
+[33mbb20865[m oppdatering av alt
+[33m58c50dd[m fikset forskjellig
+[33mf271d3d[m ingen spesielle
+[33md23eba9[m {fjernet necxtt}
+[33m107c9f1[m Remove .next from gitignore
+[33m1910d19[m rettelser med deepseek
+[33md9e4d22[m Remove .next folder from git tracking
+[33m253de47[m oppdatert 26.04
+[33m67df404[m La til før/etter-bilde på inspeksjon og redigering i inspeksjonshistorikk
+[33m5c8e7d9[m oppdatert timeføring
+[33mf4e39eb[m en komplett versjon
+[33m1a2cf45[m angre
+[33m7dce42b[m {commit_message}
+[33mb251aab[m Merge branch 'main' of https://github.com/eddiee1987/hendig.app
+[33m6f0053c[m Din beskrivelse av endringene
+[33m3e1be78[m Fikset byggproblemer
+[33m709efbe[m Din beskrivelse av endringene
+[33md42bae9[m Ignorerer .next-mappen i Git
+[33m0863144[m Din beskrivelse av endringene
+[33m408dd4b[m Ryddet opp avhengigheter
+[33mc3a2280[m Ryddet opp avhengigheter
+[33m10b530f[m Fix missing Tailwind dependency
+[33m28f2d19[m Fresh start uten node_modules
