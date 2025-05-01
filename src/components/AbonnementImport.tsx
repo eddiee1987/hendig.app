@@ -169,39 +169,6 @@ export default function AbonnementImport({ onImportSuccess }: AbonnementImportPr
     return ''
   }
 
-  const processAbonnements = async (data: AbonnementData[]) => {
-    for (let i = 0; i < data.length; i++) {
-      const abonnement = data[i]
-      
-      try {
-        await createAbonnement({
-          fornavn: abonnement.fornavn,
-          etternavn: abonnement.etternavn,
-          adresse: abonnement.adresse,
-          kommune: abonnement.kommune,
-          var: abonnement.var_utfort ? 'utført' : 'ikke utført',
-          host: abonnement.host_utfort ? 'utført' : 'ikke utført',
-          epost: abonnement.epost,
-          fakturert: abonnement.fakturert,
-          fornyelsesdato: abonnement.fornyelsesdato,
-          sum: abonnement.sum,
-          notat: abonnement.notat
-        })
-        
-        setProcessedRows(i + 1)
-        setProgress(Math.round(((i + 1) / data.length) * 100))
-      } catch (error) {
-        console.error(`Error creating abonnement ${abonnement.etternavn}:`, error)
-        // Continue with next abonnement
-      }
-    }
-    
-    // Call the onImportSuccess callback if provided
-    if (onImportSuccess) {
-      onImportSuccess();
-    }
-  }
-
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
       <h2 className="text-xl font-semibold text-white mb-4">Importer abonnementer</h2>

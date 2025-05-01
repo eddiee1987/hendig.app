@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  UserGroupIcon, 
-  ClipboardDocumentCheckIcon, 
-  FolderIcon, 
-  ChartBarIcon,
-  ClockIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline'
+
+type Event = {
+  type: string
+  title: string
+  location: string
+  time: string
+}
 
 export default function DashboardContent() {
   const [greeting, setGreeting] = useState('')
@@ -18,7 +17,7 @@ export default function DashboardContent() {
     prosjekter: 0,
     timer: 0
   })
-  const [recentEvents, setRecentEvents] = useState([])
+  const [recentEvents, setRecentEvents] = useState<Event[]>([])
 
   useEffect(() => {
     // Hilsen basert på tidspunkt
@@ -60,8 +59,37 @@ export default function DashboardContent() {
 
   return (
     <div className="p-8">
-      {/* Resten av koden er uendret */}
-      {/* ... */}
+      <h1 className="text-2xl font-bold mb-4">{greeting}</h1>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="bg-gray-100 p-4 rounded">
+          <h3>Kunder</h3>
+          <p className="text-xl font-bold">{stats.kunder}</p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded">
+          <h3>Inspeksjoner</h3>
+          <p className="text-xl font-bold">{stats.inspeksjoner}</p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded">
+          <h3>Prosjekter</h3>
+          <p className="text-xl font-bold">{stats.prosjekter}</p>
+        </div>
+        <div className="bg-gray-100 p-4 rounded">
+          <h3>Timer</h3>
+          <p className="text-xl font-bold">{stats.timer}</p>
+        </div>
+      </div>
+      <div className="bg-gray-100 p-4 rounded">
+        <h2 className="text-xl font-bold mb-4">Nylige hendelser</h2>
+        <ul className="space-y-2">
+          {recentEvents.map((event, index) => (
+            <li key={index} className="border-b pb-2">
+              <p className="font-medium">{event.title}</p>
+              <p className="text-sm text-gray-600">{event.location}</p>
+              <p className="text-xs text-gray-500">{event.time}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
-} 
+}
