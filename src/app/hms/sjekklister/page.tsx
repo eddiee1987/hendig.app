@@ -43,6 +43,7 @@ const SjekklisterPage = () => {
       } else {
         setChecklists((prev) => prev.filter((c) => c.id !== id));
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError('Kunne ikke slette sjekkliste.');
     } finally {
