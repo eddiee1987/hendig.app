@@ -229,3 +229,15 @@ export async function registerLagerTransaksjon({ key, type, antall, kommentar }:
     return { error: 'Uventet feil ved registrering' }
   }
 }
+
+// Oppdater vedlikeholdsoppgave
+export async function updateMaintenanceTask(taskId: string, startDate: Date, endDate: Date) {
+  const { error } = await supabase
+    .from('maintenance_tasks')
+    .update({ start_date: startDate.toISOString(), end_date: endDate.toISOString() })
+    .eq('id', taskId);
+
+  if (error) {
+    throw new Error(`Failed to update maintenance task: ${error.message}`);
+  }
+}

@@ -60,6 +60,7 @@ __turbopack_context__.s({
     "registerLagerTransaksjon": (()=>registerLagerTransaksjon),
     "supabase": (()=>supabase),
     "updateLager": (()=>updateLager),
+    "updateMaintenanceTask": (()=>updateMaintenanceTask),
     "updateTimeEntry": (()=>updateTimeEntry)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$supabase$2d$js$2f$dist$2f$module$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@supabase/supabase-js/dist/module/index.js [app-ssr] (ecmascript) <locals>");
@@ -250,6 +251,15 @@ async function registerLagerTransaksjon({ key, type, antall, kommentar }) {
         return {
             error: 'Uventet feil ved registrering'
         };
+    }
+}
+async function updateMaintenanceTask(taskId, startDate, endDate) {
+    const { error } = await supabase.from('maintenance_tasks').update({
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString()
+    }).eq('id', taskId);
+    if (error) {
+        throw new Error(`Failed to update maintenance task: ${error.message}`);
     }
 }
 }}),

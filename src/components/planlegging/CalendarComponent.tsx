@@ -1,13 +1,15 @@
 'use client'
 
-import { DnDCalendar } from 'react-big-calendar-dnd'
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop'
 import { dateFnsLocalizer, Event } from 'react-big-calendar'
 import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { nb } from 'date-fns/locale/nb'
 import { MaintenanceTask } from '@/types/maintenance'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
+import 'react-big-calendar/lib/addons/dragAndDrop/styles.css'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import { updateMaintenanceTask } from '@/lib/supabase'
 
 const locales = {
   'nb': nb,
@@ -45,6 +47,7 @@ interface Props {
 interface CustomEvent extends Event {
   id: string;
 }
+const DragAndDropCalendar = withDragAndDrop(Event);
 
 export default function CalendarComponent({ tasks, onTaskDrop }: Props) {
   const events = tasks.map(task => ({
@@ -55,14 +58,19 @@ export default function CalendarComponent({ tasks, onTaskDrop }: Props) {
     resource: task
   }))
 
-  const handleEventDrop = ({ event, start, end }: { event: CustomEvent; start: Date; end: Date }) => {
-    onTaskDrop(event.id, start, end);
+  const handleEventDrop = async ({ event, start, end }: { event: CustomEvent; start: Date; end: Date }) => {
+    try {
+      await updateMaintenanceTask(event.id, start, end);
+      onTaskDrop(event.id, start, end);
+    } catch (error) {
+      console.error('Failed to update maintenance task:', error);
+    }
   }
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="calendar-container rounded-lg shadow-lg bg-white p-4">
-        <DnDCalendar
+        <DragAndDropCalendar
           localizer={localizer}
           events={events}
           defaultView="week"
@@ -85,4 +93,5 @@ export default function CalendarComponent({ tasks, onTaskDrop }: Props) {
       </div>
     </DndProvider>
   )
+}
 }
