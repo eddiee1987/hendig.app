@@ -5,10 +5,8 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { 
-  HomeIcon, 
   ClipboardDocumentCheckIcon,
   CreditCardIcon,
-  CalendarIcon,
   FolderIcon,
   ChartBarIcon,
   UserCircleIcon,
@@ -61,7 +59,6 @@ export default function Navbar() {
     { href: '/hms', icon: FolderIcon, label: 'HMS' },
     { href: '/abonnement', icon: CreditCardIcon, label: 'Abonnement' },
     { href: '/prosjekter', icon: FolderIcon, label: 'Prosjekter' },
-    { href: '/planlegging', icon: CalendarIcon, label: 'Planlegging' },
     { href: '/lager', icon: WarehouseIcon, label: 'Lager' }, // <-- Lager shortcut
     { href: '/kunder', icon: UserCircleIcon, label: 'Kunder' },
     { href: '/ansatte', icon: UsersIcon, label: 'Ansatte' },
@@ -76,8 +73,8 @@ export default function Navbar() {
         showExpanded ? "w-64" : "w-16"
       )}
       onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >a
+    onMouseLeave={handleMouseLeave}
+    >
       {/* Logo and toggle button */}
       <div className={cn(
         "flex items-center border-b border-gray-800",
